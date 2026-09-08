@@ -1,0 +1,2522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ERM Account Planning — Thin Account</title>
+<style>
+:root{
+  --navy:#122B44;
+  --navy-2:#1B3B5C;
+  --teal:#2E96A6;
+  --lteal:#6FC1C9;
+  --pale:#A9C6CC;
+  --mist:#F4F8F9;
+  --card:#FFFFFF;
+  --border:#DCE4E7;
+  --text:#1E2A32;
+  --sub:#5B6B74;
+  --good:#2E8B57;
+  --warn:#C08A1E;
+  --risk:#B23A48;
+  --focus:#2E96A6;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--mist);color:var(--text);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea,select{font-family:inherit;color:var(--text);}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:#c7d3d8;border-radius:6px;}
+
+.app{display:flex;min-height:100vh;}
+
+/* Sidebar */
+.sidebar{
+  width:250px;flex-shrink:0;background:var(--navy);color:#fff;
+  display:flex;flex-direction:column;padding:22px 0;
+}
+.brand{padding:0 20px 18px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px;}
+.brand-name{font-size:11px;letter-spacing:0.06em;color:var(--pale);text-transform:uppercase;margin-bottom:4px;}
+.brand-title{font-size:18px;font-weight:700;}
+.brand-sub{font-size:12px;color:var(--pale);margin-top:2px;}
+
+.nav{flex:1;display:flex;flex-direction:column;gap:2px;padding:0 10px;}
+.nav-item{
+  display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border-radius:8px;
+  color:#C9D8E0;font-size:13.5px;font-weight:600;background:none;border:none;text-align:left;width:100%;
+  transition:background .15s ease;
+}
+.nav-item .num{
+  width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;
+}
+.nav-item:hover{background:rgba(255,255,255,0.08);}
+.nav-item.active{background:var(--teal);color:#fff;}
+.nav-item.active .num{background:rgba(255,255,255,0.25);}
+
+.sidebar-foot{padding:14px 20px 0;border-top:1px solid rgba(255,255,255,0.12);margin-top:14px;}
+.save-status{font-size:11.5px;color:var(--pale);display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--lteal);}
+.dot.saving{background:var(--warn);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;
+}
+.page-heading h1{font-size:19px;margin:0;color:var(--navy-2);}
+.page-heading p{font-size:12.5px;color:var(--sub);margin:2px 0 0;}
+.topbar-actions{display:flex;gap:10px;}
+.btn{
+  border:1px solid var(--border);background:#fff;color:var(--navy-2);padding:8px 14px;
+  border-radius:8px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;
+}
+.btn:hover{background:var(--mist);}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+.btn.primary:hover{background:#268797;}
+.btn.ghost{border:none;background:none;color:var(--sub);}
+.btn.small{padding:5px 10px;font-size:12px;}
+
+.content{padding:26px 28px 60px;overflow-y:auto;flex:1;}
+.pagewrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:20px;}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
+.card h2{font-size:15px;margin:0 0 14px;color:var(--navy-2);}
+.grid{display:grid;gap:14px;}
+.grid.cols-2{grid-template-columns:1fr 1fr;}
+.grid.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+
+.field label{display:block;font-size:11.5px;color:var(--sub);font-weight:700;margin-bottom:5px;}
+.field input[type=text],.field input[type=number],.field textarea,.field select{
+  width:100%;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13.5px;background:#fbfcfc;
+}
+.field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--focus);outline-offset:1px;background:#fff;}
+.field textarea{resize:vertical;min-height:60px;}
+
+/* Bullet list editor */
+.bullets{display:flex;flex-direction:column;gap:8px;}
+.bullet-row{display:flex;gap:8px;align-items:flex-start;}
+.bullet-row .dash{color:var(--teal);font-weight:800;margin-top:9px;}
+.bullet-row input{flex:1;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13.5px;background:#fbfcfc;}
+.bullet-row input:focus{outline:2px solid var(--focus);outline-offset:1px;background:#fff;}
+.icon-btn{
+  border:none;background:none;color:var(--sub);width:26px;height:26px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;
+}
+.icon-btn:hover{background:#f1f3f4;color:var(--risk);}
+.add-link{
+  border:1px dashed var(--border);background:none;color:var(--teal);font-weight:700;font-size:12.5px;
+  padding:8px 10px;border-radius:7px;text-align:left;
+}
+.add-link:hover{background:#eef6f7;}
+
+/* Tables */
+.tablewrap{overflow-x:auto;}
+table.edit-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.edit-table th{
+  text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--sub);
+  padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+table.edit-table td{padding:5px 6px;vertical-align:top;border-bottom:1px solid #eef1f2;}
+table.edit-table td input, table.edit-table td textarea, table.edit-table td select{
+  width:100%;border:1px solid transparent;border-radius:6px;padding:7px 8px;font-size:13px;background:transparent;
+}
+table.edit-table td input:hover, table.edit-table td textarea:hover, table.edit-table td select:hover{background:#f8fafa;}
+table.edit-table td input:focus, table.edit-table td textarea:focus, table.edit-table td select:focus{
+  border:1px solid var(--focus);background:#fff;outline:none;
+}
+table.edit-table td textarea{min-height:36px;resize:vertical;}
+table.edit-table tr:hover td{background:#fafcfc;}
+table.edit-table td.action-col{width:34px;text-align:center;}
+
+/* LoB / group tabs */
+.lobtabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;align-items:center;}
+.lobtab{
+  border:1px solid var(--border);background:#fff;padding:8px 14px;border-radius:20px;font-size:12.5px;font-weight:700;
+  color:var(--sub);display:flex;align-items:center;gap:6px;
+}
+.lobtab.active{background:var(--navy-2);border-color:var(--navy-2);color:#fff;}
+.lobtab .x{opacity:.7;font-size:11px;}
+.lobtab .x:hover{opacity:1;}
+.tab-add-form{display:flex;gap:6px;align-items:center;}
+.tab-add-form input{border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;}
+
+/* Heatmap cards */
+.heatgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.heatcard{border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;background:#fff;}
+.heatcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.heatcard-name{border:none;background:none;font-weight:700;font-size:14px;color:var(--navy-2);padding:2px 0;width:100%;}
+.heatcard-name:focus{outline:none;border-bottom:1px solid var(--focus);}
+.pill{font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;letter-spacing:.02em;}
+.pill-select{border:none;-webkit-appearance:none;appearance:none;}
+.pill.existing{background:var(--navy-2);color:#fff;}
+.pill.whitespace{background:var(--teal);color:#fff;}
+.pill.na{background:#E2E7E9;color:#5B6B74;}
+.heatcard-value{border:none;background:none;font-size:12.5px;color:var(--sub);width:100%;padding:2px 0;}
+.heatcard-value:focus{outline:none;border-bottom:1px solid var(--focus);}
+.heatcard-remove{position:absolute;top:8px;right:8px;}
+.icon-toggle{border:1px solid var(--border);background:#fff;border-radius:8px;width:32px;height:32px;font-size:15px;line-height:1;color:#C7D0D3;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s ease;}
+.icon-toggle:hover{border-color:var(--risk);}
+.icon-toggle.on{background:var(--risk);border-color:var(--risk);color:#fff;}
+.demogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+.demotile{border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;background:#fff;}
+.demotile select.demotile-metric{border:none;background:none;font-weight:700;font-size:13.5px;color:var(--navy-2);padding:2px 0 6px;width:100%;}
+.demotile input.demotile-region{border:none;border-bottom:1px solid var(--border);background:none;font-size:12.5px;color:var(--text);width:100%;padding:4px 0;margin-bottom:6px;}
+.demotile input.demotile-value{border:none;background:none;font-weight:700;font-size:18px;color:var(--teal);width:100%;padding:2px 0 6px;}
+.demotile textarea.demotile-notes{border:none;background:var(--mist);border-radius:6px;font-size:12px;color:var(--sub);width:100%;padding:6px 8px;resize:vertical;min-height:44px;}
+.demotile-remove{position:absolute;top:8px;right:8px;}
+
+.hint{font-size:12px;color:var(--sub);margin:-4px 0 6px;}
+.togglebar{display:flex;gap:8px;margin-bottom:16px;}
+.toggle-btn{border:1px solid var(--border);background:#fff;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--sub);}
+.toggle-btn.active{background:var(--navy-2);color:#fff;border-color:var(--navy-2);}
+
+/* ===== PowerPoint-style org chart ===== */
+.orgchart-wrap{background:#fff;border:1px solid var(--border);border-radius:10px;padding:28px 24px 22px;}
+.orgroot-row{display:flex;justify-content:center;margin-bottom:0;}
+.orgroot-box{
+  min-width:280px;max-width:420px;border-radius:8px;padding:14px 18px;text-align:center;position:relative;
+  border:1px solid rgba(0,0,0,0.06);
+}
+.orgroot-name{font-weight:800;font-size:15px;}
+.orgroot-title{font-size:12px;margin-top:3px;opacity:.9;}
+.orgroot-owner{
+  position:absolute;top:-9px;right:-9px;background:#fff;border:1px solid var(--border);border-radius:6px;
+  padding:3px 8px;font-size:10.5px;font-weight:800;color:var(--navy-2);box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.connector{width:2px;background:var(--navy-2);height:22px;margin:0 auto;}
+.branch-wrap{display:flex;justify-content:center;gap:0;}
+.branch-line{display:flex;flex-direction:column;align-items:center;flex:1;max-width:340px;}
+.branch-line .stem{width:2px;background:var(--navy-2);height:18px;}
+
+.catsection{margin-top:0;}
+.catbar{
+  background:#3A4750;color:#fff;font-weight:800;font-size:12.5px;text-align:center;
+  padding:9px 14px;border-radius:6px;margin-bottom:12px;letter-spacing:.01em;
+}
+.catgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+.orgcard{
+  border-radius:8px;padding:11px 14px 10px;position:relative;min-height:64px;
+  border:1px solid rgba(0,0,0,0.06);
+}
+.orgcard-name{font-weight:800;font-size:13px;}
+.orgcard-title{font-size:11.5px;margin-top:2px;opacity:.9;}
+.orgcard-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.orgcard-owner{
+  background:#fff;border:1px solid var(--border);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:800;
+  color:var(--navy-2);
+}
+.orgcard-bs{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,0.5);}
+.orgcard-reports{font-size:10px;opacity:.85;margin-top:6px;font-style:italic;}
+
+.status-Strong{background:#12395C;color:#fff;}
+.status-Stable{background:#2E96A6;color:#fff;}
+.status-Developing{background:#8FCAD1;color:#0E2C3E;}
+.status-At-risk{background:#C9D8DC;color:#0E2C3E;}
+.status-No{background:#FFFFFF;color:#3A4750;border:1px dashed #C7D0D3 !important;}
+
+.orglegend{
+  display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-top:6px;padding-top:16px;border-top:1px solid var(--border);
+  font-size:11.5px;color:var(--sub);
+}
+.orglegend .item{display:flex;align-items:center;gap:6px;}
+.orglegend .swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+
+/* Account inventory */
+.acctgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.acctcard{
+  border:1px solid var(--border);border-radius:10px;padding:16px 18px;background:#fff;position:relative;
+  cursor:pointer;transition:box-shadow .15s ease, border-color .15s ease;
+}
+.acctcard:hover{box-shadow:0 2px 10px rgba(0,0,0,.06);border-color:var(--teal);}
+.acctcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.acctcard-name{font-weight:800;font-size:15px;color:var(--navy-2);}
+.acctcard-tier{font-size:10.5px;font-weight:800;color:var(--sub);background:#EEF2F3;padding:2px 8px;border-radius:5px;margin-top:4px;display:inline-block;}
+.acctcard-status{font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:20px;flex-shrink:0;}
+.acctcard-stats{display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--sub);}
+.acctcard-stats b{color:var(--text);}
+.acctcard-remove{position:absolute;top:10px;right:10px;}
+.acctcard.active-account{border-color:var(--navy-2);box-shadow:0 0 0 2px rgba(27,59,92,0.12);}
+.new-acct-card{
+  border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;
+  min-height:96px;color:var(--teal);font-weight:700;font-size:13.5px;cursor:pointer;background:none;
+}
+.new-acct-card:hover{background:#eef6f7;}
+.shared-note{
+  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);background:#EEF6F7;border:1px solid #D7E9EA;
+  border-radius:8px;padding:9px 12px;margin-bottom:16px;
+}
+
+/* Stakeholder editor extra */
+.two-select{display:flex;gap:4px;}
+.two-select select{width:50%;}
+
+.toast{
+  position:fixed;bottom:22px;right:22px;background:var(--navy-2);color:#fff;padding:11px 18px;border-radius:8px;
+  font-size:13px;font-weight:600;opacity:0;transform:translateY(8px);transition:all .25s ease;z-index:60;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* Footer */
+.pagefooter{
+  display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#fff;
+  border-top:1px solid var(--border);
+}
+.stepper{font-size:12.5px;color:var(--sub);}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(10,20,28,0.5);display:none;align-items:center;justify-content:center;z-index:50;}
+.overlay.show{display:flex;}
+.modal{background:#fff;border-radius:12px;padding:24px;width:560px;max-width:92vw;max-height:85vh;overflow:auto;}
+.modal.modal-wide{width:960px;max-width:96vw;max-height:92vh;}
+.preview-actions{position:sticky;top:0;background:#fff;padding-bottom:12px;margin-bottom:10px;display:flex;justify-content:flex-end;gap:10px;border-bottom:1px solid #DCE4E7;z-index:2;}
+.modal h2{margin:0 0 6px;font-size:17px;color:var(--navy-2);}
+.modal p.small{font-size:12.5px;color:var(--sub);margin:0 0 14px;}
+.modal textarea{width:100%;min-height:260px;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace;line-height:1.5;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;}
+.field-inline{display:flex;gap:10px;margin-bottom:12px;}
+.field-inline .field{flex:1;}
+@media (max-width:900px){
+  .sidebar{width:70px;}
+  .brand-title,.brand-sub,.nav-item span.label{display:none;}
+  .nav-item{justify-content:center;}
+  .grid.cols-2,.grid.cols-4{grid-template-columns:1fr;}
+  .heatgrid,.catgrid{grid-template-columns:1fr;}
+}
+
+/* ===== Print / PDF export ===== */
+.print-only{display:none;}
+@media print{
+  body *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .app{display:none !important;}
+  .print-only{display:block !important;}
+  @page{ size: landscape; margin:0.5in; }
+
+  /* Compact the relationship map so each group's org chart has the best
+     chance of fitting on a single landscape page */
+  .printdoc .map-section-title{ break-before: page; }
+  .printdoc .mapgroup{ break-before: page; margin-bottom:0; }
+  .printdoc .mapgroup:first-of-type{ break-before: auto; }
+  .printdoc .orgchart-wrap{ padding:16px 16px 12px; }
+  .printdoc .catgrid{ grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:14px; }
+  .printdoc .orgcard{ padding:7px 9px 6px; min-height:0; }
+  .printdoc .orgcard-name{ font-size:11px; }
+  .printdoc .orgcard-title{ font-size:9.5px; }
+  .printdoc .orgcard-meta{ margin-top:4px; }
+  .printdoc .orgcard-owner, .printdoc .orgcard-bs{ font-size:9px; padding:1px 6px; }
+  .printdoc .orgcard-reports{ font-size:9px; margin-top:4px; }
+  .printdoc .orgroot-box{ padding:10px 16px; min-width:220px; }
+  .printdoc .orgroot-name{ font-size:13px; }
+  .printdoc .catbar{ padding:6px 10px; font-size:11px; margin-bottom:8px; }
+  .printdoc .orglegend{ padding-top:10px; margin-top:4px; font-size:9.5px; gap:10px; }
+  .printdoc .orglegend .swatch{ width:11px; height:11px; }
+  .printdoc .connector{ height:14px; }
+  .printdoc h3{ margin:0 0 10px; }
+}
+.printdoc{font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;color:#1E2A32;max-width:900px;margin:0 auto;}
+.printdoc h1{font-size:24px;color:#122B44;margin:0 0 2px;}
+.printdoc .printsub{font-size:12.5px;color:#5B6B74;margin-bottom:22px;}
+.printdoc h2{
+  font-size:14.5px;color:#fff;background:#1B3B5C;padding:8px 12px;border-radius:6px;margin:26px 0 12px;
+  break-after:avoid;
+}
+.printdoc h3{font-size:13px;color:#1B3B5C;margin:16px 0 8px;break-after:avoid;}
+.printdoc table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:10px;break-inside:avoid;}
+.printdoc th{background:#EEF2F3;text-align:left;padding:6px 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.02em;color:#5B6B74;border-bottom:1px solid #DCE4E7;}
+.printdoc td{padding:6px 8px;border-bottom:1px solid #EEF1F2;vertical-align:top;}
+.printdoc ul{margin:0 0 10px;padding-left:18px;}
+.printdoc li{margin-bottom:4px;}
+.printdoc .pbadge{display:inline-block;font-size:10px;font-weight:800;padding:3px 9px;border-radius:12px;color:#fff;}
+.printdoc .pbadge.existing{background:#1B3B5C;}
+.printdoc .pbadge.whitespace{background:#2E96A6;}
+.printdoc .pbadge.na{background:#C7D0D3;color:#3A4750;}
+.printdoc .lobblock{break-inside:avoid;margin-bottom:16px;}
+.printdoc .metagrid{display:flex;flex-wrap:wrap;gap:18px;font-size:11.5px;color:#5B6B74;margin-bottom:6px;}
+.printdoc .metagrid b{color:#1E2A32;}
+.printdoc .heatcard{break-inside:avoid;}
+.printdoc .orgcard{break-inside:avoid;}
+.printdoc .catsection{break-inside:avoid;}
+.printdoc .orgroot-box{break-inside:avoid;}
+.printdoc .mapgroup{break-before:auto;margin-bottom:24px;}
+.printdoc .heatcard-name, .printdoc .heatcard-value{border:none !important;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-name">Reimagine ERM</div>
+      <div class="brand-title" id="acctTitle">Loading…</div>
+      <div class="brand-sub" id="brandSub">Shared Account Planning Workspace</div>
+    </div>
+    <div class="nav" id="navList"></div>
+    <div class="sidebar-foot">
+      <div class="save-status" id="saveStatus"><span class="dot" id="saveDot"></span><span id="saveText">Saved</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-heading">
+        <h1 id="pageTitle"></h1>
+        <p id="pageObjective"></p>
+      </div>
+      <div class="topbar-actions" id="topbarActions">
+        <button class="btn" id="previewBtn">Preview all sections</button>
+        <button class="btn" id="exportPdfBtn">Export PDF</button>
+        <button class="btn primary" id="emailBtn">Send summary</button>
+      </div>
+    </div>
+
+    <div class="content"><div class="pagewrap" id="pageContent"></div></div>
+
+    <div class="pagefooter" id="pageFooter">
+      <button class="btn" id="prevBtn">← Previous</button>
+      <div class="stepper" id="stepper"></div>
+      <button class="btn primary" id="nextBtn">Next →</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="emailOverlay">
+  <div class="modal">
+    <h2>Send account summary</h2>
+    <p class="small" id="emailModalHint">This pulls together the current opportunities, risks, and key figures. Edit the recipient and message, then open it in your email app or copy it.</p>
+    <div class="field-inline">
+      <div class="field"><label>To</label><input type="text" id="emailTo" placeholder="name@metlife.com"></div>
+      <div class="field"><label>Subject</label><input type="text" id="emailSubject"></div>
+    </div>
+    <textarea id="emailBody"></textarea>
+    <div class="modal-actions">
+      <button class="btn" id="copyBtn">Copy text</button>
+      <button class="btn" id="closeEmailBtn">Close</button>
+      <button class="btn primary" id="openMailBtn">Open in email</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="previewOverlay">
+  <div class="modal modal-wide">
+    <div class="preview-actions">
+      <button class="btn" id="closePreviewBtn">Close</button>
+      <button class="btn primary" id="previewExportBtn">Export PDF</button>
+    </div>
+    <div id="previewContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="printArea" class="print-only"></div>
+
+<script>
+/* ============================= DATA MODEL ============================= */
+const STATUS_OPTIONS = ["Strong","Stable","Developing","At risk","No relationship identified"];
+const IMPORTANCE_OPTIONS = ["Low","Medium","High"];
+const HEAT_TYPES = ["Existing Relationship","Whitespace Opportunity","N/A"];
+const BUYER_SELLER_OPTIONS = ["Buyer","Seller","Both","N/A"];
+
+function seedPeople(){
+  return {
+    "Santander US": [
+      {id:"p1", name:"Christiana Riley", title:"CEO & President, Santander US", status:"Strong", owner:"TBD", buyerSeller:"N/A", category:"", reportsTo:[]},
+      {id:"p2", name:"John Ciulla", title:"CEO, Santander Bank", status:"Developing", owner:"TBD", buyerSeller:"Buyer", category:"Business Line Leadership", reportsTo:["p1"]},
+      {id:"p3", name:"David Hermer", title:"Head of Corporate & Inv Bank", status:"No relationship identified", owner:"TBD", buyerSeller:"Seller", category:"Business Line Leadership", reportsTo:["p1"]},
+      {id:"p4", name:"Luis Bermudez", title:"Head of Wealth", status:"No relationship identified", owner:"TBD", buyerSeller:"Buyer", category:"Business Line Leadership", reportsTo:["p1"]},
+      {id:"p5", name:"Jason Mock", title:"Head of Retail Banking", status:"No relationship identified", owner:"TBD", buyerSeller:"Buyer", category:"Business Line Leadership", reportsTo:["p1"]},
+      {id:"p9", name:"Chris Motl", title:"Head of Commercial Banking", status:"No relationship identified", owner:"TBD", buyerSeller:"Buyer", category:"Business Line Leadership", reportsTo:["p2"]},
+      {id:"p10", name:"Charles Wilkins", title:"Head of Healthcare Financial Services", status:"No relationship identified", owner:"TBD", buyerSeller:"Buyer", category:"Business Line Leadership", reportsTo:["p3"]},
+      {id:"p11", name:"David McClelland", title:"Head of Auto", status:"No relationship identified", owner:"TBD", buyerSeller:"Buyer", category:"Business Line Leadership", reportsTo:["p5"]},
+      {id:"p12", name:"Drew Burchard", title:"Head of Digital Banking", status:"No relationship identified", owner:"TBD", buyerSeller:"Buyer", category:"Business Line Leadership", reportsTo:["p5"]},
+      {id:"p6", name:"Luis Massiani", title:"Chief Operating Officer", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p1"]},
+      {id:"p7", name:"Juan Alvarez", title:"Chief Financial Officer", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p1"]},
+      {id:"p8", name:"Kristy Berner", title:"Chief Legal Officer", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p1"]},
+      {id:"p13", name:"Pablo del Campo", title:"Chief Strategy Officer", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p6"]},
+      {id:"p14", name:"Oriol Foz", title:"Chief People Officer", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p6"]},
+      {id:"p15", name:"Peter Kapp", title:"Head of Strategic Execution", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p6"]},
+      {id:"p16", name:"Eva Radtke", title:"Chief Corporate Affairs Officer", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p8"]},
+      {id:"p17", name:"Borja Guisasola", title:"Chief Audit Executive", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p1"]},
+      {id:"p18", name:"RL Prasad", title:"Chief Risk Officer", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Corporate & Functional Leadership", reportsTo:["p1"]}
+    ],
+    "Santander Insurance": [
+      {id:"p19", name:"Belén Romana", title:"Non-Executive Chair, Santander Insurance", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"", reportsTo:[]},
+      {id:"p20", name:"Javier García-Carranza", title:"1st Deputy Chair; Global Head of Wealth Mgmt & Insurance", status:"Strong", owner:"MK", buyerSeller:"Buyer", category:"Executive Directors", reportsTo:["p19"]},
+      {id:"p21", name:"Peter Huber", title:"2nd Deputy Chair; Global Head of Santander Insurance", status:"Strong", owner:"MK", buyerSeller:"Buyer", category:"Executive Directors", reportsTo:["p19"]},
+      {id:"p25", name:"Jaime Guasch", title:"Global Strategy & Corporate Dev", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Executive Directors", reportsTo:["p20"]},
+      {id:"p26", name:"Jaime Rodríguez Andrade", title:"General Mgr, Insurance Holding", status:"Developing", owner:"MK", buyerSeller:"Buyer", category:"Executive Directors", reportsTo:["p21"]},
+      {id:"p27", name:"Adela Martín", title:"Business Globalization", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Executive Directors", reportsTo:["p20"]},
+      {id:"p28", name:"Victor Manuel Allende", title:"Private Banking Spain", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Executive Directors", reportsTo:["p20"]},
+      {id:"p29", name:"Joaquín Capdevila", title:"Digital Consumer Bank", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Executive Directors", reportsTo:["p19"]},
+      {id:"p22", name:"Eduardo Dávila", title:"Independent non-exec director", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Independent Non-Executive Directors", reportsTo:["p19"]},
+      {id:"p23", name:"Cristina Nestares", title:"Independent non-exec director", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Independent Non-Executive Directors", reportsTo:["p19"]},
+      {id:"p24", name:"Regina Garay", title:"Independent non-exec director", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", category:"Independent Non-Executive Directors", reportsTo:["p19"]}
+    ]
+  };
+}
+
+function blankAccountData(name){
+  return {
+    accountName: name || "New Account",
+    tier: "Tier 2",
+    nextPersonId: 1,
+    lastEdited: null,
+    reviewDates: {},
+    overview: {
+      rationale: [],
+      opportunityThesis: [],
+      stakeholders: []
+    },
+    snapshot: {
+      metrics: [
+        {label:"Revenue", regions:[], value:"", notes:""},
+        {label:"Headquarters", regions:[], value:"", notes:"", isProfile:true}
+      ],
+      regionFilter: ["US","LATAM","APAC","EMEA"],
+      developments: [],
+      priorities: [],
+      performance: [],
+      revenueByBusiness: [],
+      revenueByGeo: []
+    },
+    glance: {
+      overallStatus: "Developing",
+      inAmount: "",
+      outAmount: "",
+      importanceToMetlife: "Medium",
+      importanceToSantander: "Medium",
+      metlifeObjectives: [],
+      santanderObjectives: [],
+      heatmap: [
+        {lob:"New Line of Business", value:"", type:"N/A"}
+      ]
+    },
+    footprint: {
+      activeLob: "New Line of Business",
+      lobs: {
+        "New Line of Business": { existing: [], opportunities: [] }
+      }
+    },
+    contacts: {
+      activeLob: "New Line of Business",
+      lobs: {
+        "New Line of Business": []
+      }
+    },
+    relationshipMap: {
+      activeGroup: "Key Contacts",
+      view: "chart",
+      groups: { "Key Contacts": [] }
+    },
+    growthRisks: {
+      opportunities: [],
+      risks: []
+    },
+    interactions: [],
+    keyMeetings: []
+  };
+}
+
+function defaultSantanderAccount(){
+  return {
+    accountName: "Santander",
+    tier: "Tier 1",
+    nextPersonId: 30,
+    lastEdited: null,
+    reviewDates: {},
+    overview: {
+      rationale: [
+        "Santander has broad relationships across multiple MetLife businesses",
+        "$500M+ near-term pipeline opportunities (e.g., embedded insurance in Latin America and EMEA)",
+        "Strong alignment with MetLife’s insurance capabilities",
+        "Established access to senior Santander executives"
+      ],
+      opportunityThesis: [
+        "$500M+ near-term pipeline — RIS IRC 1035 transfer (ex-Symetra); splits 50/50 to PineBridge/MIM and Wellington via IIG",
+        "Global Benefits — embedded insurance opportunities across Latin America and EMEA"
+      ],
+      stakeholders: [
+        {name:"Michel Khalaf", title:"CEO"},
+        {name:"Eric Clurfain", title:"President, LATAM"},
+        {name:"Nuria Garcia", title:"Regional President, EMEA"},
+        {name:"Javier Cabello", title:"Head of MetLife Xcelerator LATAM"},
+        {name:"Paz Martinez", title:"Relationship Manager"}
+      ]
+    },
+    snapshot: {
+      metrics: [
+        {label:"Revenue", regions:[], value:"$72.4B", notes:""},
+        {label:"Net income", regions:[], value:"$16.4B", notes:""},
+        {label:"Market cap", regions:[], value:"$171.7B", notes:""},
+        {label:"EPS growth", regions:[], value:"+17%", notes:""},
+        {label:"Profit before tax", regions:[], value:"$24.2B", notes:""},
+        {label:"# of employees", regions:[], value:"186,370", notes:"Large Santander footprint in India — MetLife does not currently have a policy here; gap to size and pursue"},
+        {label:"Footprint", regions:[], value:"15 Countries", notes:""},
+        {label:"Pension plan size", regions:[], value:"", notes:"Relevant for RIS and MIM"},
+        {label:"Retail customers", regions:["LATAM","EMEA"], value:"", notes:"Bank assurance opportunity sizing"},
+        {label:"Stock price", regions:[], value:"$10.44", notes:"", isProfile:true},
+        {label:"Headquarters", regions:[], value:"Madrid, Spain", notes:"", isProfile:true},
+        {label:"Year founded", regions:[], value:"1856", notes:"", isProfile:true},
+        {label:"Partnerships & JVs (insurance)", regions:[], value:"", notes:"Existing partnerships/JVs with other insurance companies, incl. structure", isProfile:true},
+        {label:"Balance sheet / trust assets", regions:[], value:"", notes:"Whether they hold trust or deposit-type assets on balance sheet — relevant for Treasury", isProfile:true}
+      ],
+      regionFilter: ["US","LATAM","APAC","EMEA"],
+      developments: [
+        "FY25 record results: Profit rose 12% to $14.1B, the fourth consecutive year of record results, with revenue of $72.4B",
+        "Trustee Savings Bank (TSB) acquisition (UK): Agreed $2.65bn all-cash purchase of TSB, adding ~28M combined customers and national scale",
+        "LATAM insurance expansion: Actively exploring opportunities beyond the existing Zurich JV (Mexico, Brazil)",
+        "New 2026-28 strategic plan approved: Approved alongside record 2025 results, reinforcing the ONE Transformation and global platform strategy"
+      ],
+      priorities: [
+        "Accelerate digital transformation: Expand ONE and Openbank to simplify platforms, improve customer experience, and reduce cost-to-serve",
+        "Grow Wealth & Insurance: Increase fee-based growth across savings, protection, retirement, and wealth offerings",
+        "Deepen LATAM growth: Scale insurance across Mexico, Brazil, and Chile, including opportunities beyond existing partnerships",
+        "Leverage global scale: Use shared platforms and cross-market capabilities to deepen customer relationships and diversify growth"
+      ],
+      performance: [
+        "Fourth consecutive year of record profit up 12% YoY in FY2025, with momentum continuing into Q1 2026 (revenue +4%)",
+        "8M new customers added, reaching 180M globally, driven by strong loan and deposit growth across markets",
+        "Efficiency ratio improved to 41.2%, the best level in 15+ years, as the ONE Transformation program simplifies and digitizes operations",
+        "$11B+ in buybacks committed through 2025-26 earnings and excess capital, alongside a new 2026-28 strategic plan"
+      ],
+      revenueByBusiness: [
+        {label:"Retail & Comm. Banking", value:51},
+        {label:"Corp. & Inv. Banking", value:17},
+        {label:"Digital Consumer Bank", value:16},
+        {label:"Wealth Mgmt. & Insurance", value:8},
+        {label:"PagoNxt", value:8}
+      ],
+      revenueByGeo: [
+        {label:"U.S.", value:40},
+        {label:"Spain", value:22},
+        {label:"Brazil", value:17},
+        {label:"U.K.", value:11},
+        {label:"Others (Various Countries & Regions)", value:10}
+      ]
+    },
+    glance: {
+      overallStatus: "Developing",
+      inAmount: "$33.8M",
+      outAmount: "$11.4M",
+      importanceToMetlife: "High",
+      importanceToSantander: "High",
+      metlifeObjectives: [
+        "Expand bill protection and insurance distribution",
+        "Grow Global Benefits across priority LATAM markets",
+        "Increase adoption of MIM investment solutions"
+      ],
+      santanderObjectives: [
+        "Competitive U.S. benefits for their workforce",
+        "Global Benefits partner, losing ground on price",
+        "Deposit placement & asset-mgmt capacity (stated, not acted on)"
+      ],
+      heatmap: [
+        {lob:"U.S. Group Benefits — National Accounts", value:"Total premium $5.9M (+1% YoY)", type:"Existing Relationship"},
+        {lob:"Treasury", value:"Renewed; $4B upside", type:"Existing Relationship"},
+        {lob:"Global Benefits", value:"~$14M pipeline", type:"Whitespace Opportunity"},
+        {lob:"Corporate Development / M&A", value:"N/A", type:"N/A"},
+        {lob:"Retirement & Income Solutions (RIS)", value:"~$500M pipeline", type:"Existing Relationship"},
+        {lob:"Procurement", value:"N/A", type:"N/A"},
+        {lob:"Investment Management (MIM)", value:"~$14M pipeline", type:"Whitespace Opportunity"},
+        {lob:"Global Technology & Operations (GTO)", value:"N/A", type:"N/A"},
+        {lob:"Reinsurance", value:"", type:"N/A"},
+        {lob:"Bank Assurance / Third-Party Distribution", value:"", type:"N/A"}
+      ]
+    },
+    footprint: {
+      activeLob: "U.S. Group Benefits — National Accounts",
+      lobs: {
+        "U.S. Group Benefits — National Accounts": {
+          existing: [
+            {business:"LTD", amount:"$2.5M", effective:"1/1/2027", renewed:"Pending", broker:"Marsh", renewalCycleMonths:"12", nextRenewal:"1/1/2027", atRisk:"Yes", notes:"Total premium $5.9M (+1% YoY); rank ~#536. Webster census pending"},
+            {business:"STD / Crit. Illness / Legal", amount:"$3.5M", effective:"—", renewed:"✓", broker:"", nextRenewal:"", atRisk:"No", notes:""}
+          ],
+          opportunities: [
+            {opportunity:"Upwise", amount:"—", effective:"—", awarded:"Pending", owner:"", target:"", notes:""},
+            {opportunity:"MetLife Legal (TurboTax)", amount:"—", effective:"—", awarded:"Pending", owner:"", target:"", notes:""}
+          ]
+        },
+        "Treasury": {
+          existing: [
+            {business:"RCF (Tier 3)", amount:"$125M / 4%", effective:"—", renewed:"✓", notes:"No deposits held despite stated Santander interest; new coverage manager (Kafetz) engaged"},
+            {business:"IB Fees / Brokerage", amount:"$6.8M / $4.6M", effective:"—", renewed:"✓", notes:""}
+          ],
+          opportunities: [
+            {opportunity:"Cash Deposit Placement", amount:"$50–100M", effective:"—", awarded:"Pending", owner:"", target:"", notes:""},
+            {opportunity:"RCF Upsize Share", amount:"$3B→$4B", effective:"—", awarded:"Pending", owner:"", target:"", notes:""}
+          ]
+        },
+        "Global Benefits": {
+          regions: {
+            "LATAM": {
+              existing: [
+                {business:"Mexico — Major Medical", amount:"$27.8M", effective:"8/1/2026", renewed:"✓", broker:"", renewalCycleMonths:"12", nextRenewal:"", atRisk:"No", notes:"New premium down ~61% YoY; Mexico Life lost to Zurich"}
+              ],
+              opportunities: [
+                {opportunity:"Mexico — Life", amount:"~$6M", effective:"3/1/2026", awarded:"Pending", owner:"", target:"", notes:""}
+              ]
+            },
+            "APAC": { existing: [], opportunities: [] },
+            "EMEA": {
+              existing: [],
+              opportunities: [
+                {opportunity:"UK — Life / Disability", amount:"—", effective:"2028 review", awarded:"Lost", owner:"", target:"", notes:"Lost on price to Zurich/L&G, Unum"}
+              ]
+            }
+          },
+          attributes: {maxisClient:"", maxisType:"", maxisOtherDescription:"", notes:""}
+        },
+        "Corporate Development / M&A": { existing: [], opportunities: [] },
+        "Retirement & Income Solutions (RIS)": {
+          existing: [
+            {business:"IRC 1035 transfer (ex-Symetra)", amount:"~$500M", effective:"—", renewed:"—", notes:"$500M splits 50/50 to PineBridge/MIM & Wellington via IIG"}
+          ],
+          opportunities: []
+        },
+        "Procurement": { existing: [], opportunities: [] },
+        "Investment Management (MIM)": {
+          existing: [
+            {business:"No in-force business", amount:"—", effective:"—", renewed:"—", notes:"Sourced via Santander Asset Mgmt; ~$250M of RIS transfer may flow to a MIM mandate"}
+          ],
+          opportunities: [
+            {opportunity:"Global Focus Equities", amount:"$10M", effective:"—", awarded:"Pending", owner:"", target:"", notes:""},
+            {opportunity:"MIPEP II", amount:"$4M", effective:"—", awarded:"Pending", owner:"", target:"", notes:""}
+          ]
+        },
+        "Global Technology & Operations (GTO)": { existing: [], opportunities: [] }
+      }
+    },
+    contacts: {
+      activeLob: "U.S. Group Benefits — National Accounts",
+      lobs: {
+        "U.S. Group Benefits — National Accounts": [
+          {name:"Jordan Ellis", title:"Managing Director, National Accounts", email:"jordan.ellis@metlife.com", phone:"+1 (212) 555-0142"},
+          {name:"Priya Nathan", title:"Relationship Manager, National Accounts", email:"priya.nathan@metlife.com", phone:""}
+        ],
+        "Treasury": [
+          {name:"Marcus Chen", title:"Director, Treasury Coverage", email:"marcus.chen@metlife.com", phone:"+1 (212) 555-0198"}
+        ],
+        "Global Benefits": [
+          {name:"Sofia Marchetti", title:"Managing Director, Global Benefits", email:"sofia.marchetti@metlife.com", phone:"", opportunity:""},
+          {name:"Diego Alvarez", title:"AVP, Global Benefits — LATAM", email:"diego.alvarez@metlife.com", phone:"", opportunity:"Mexico — Life (LATAM)"},
+          {name:"Fiona Clarke", title:"VP, Global Benefits — EMEA", email:"fiona.clarke@metlife.com", phone:"", opportunity:"UK — Life / Disability (EMEA)"}
+        ],
+        "Corporate Development / M&A": [],
+        "Retirement & Income Solutions (RIS)": [
+          {name:"Owen Brooks", title:"Director, RIS Coverage", email:"owen.brooks@metlife.com", phone:""}
+        ],
+        "Procurement": [],
+        "Investment Management (MIM)": [
+          {name:"Elena Petrova", title:"VP, MIM Client Group", email:"elena.petrova@metlife.com", phone:""}
+        ],
+        "Global Technology & Operations (GTO)": [],
+        "Reinsurance": [],
+        "Bank Assurance / Third-Party Distribution": []
+      }
+    },
+    relationshipMap: {
+      activeGroup: "Santander US",
+      view: "chart",
+      groups: seedPeople()
+    },
+    growthRisks: {
+      opportunities: [
+        {signal:"Santander is expanding its U.S. workforce and benefits offering", whitespace:"Expand MetLife coverage to include Dental and Vision", nextStep:"Meet with Santander benefits leadership to assess needs and position MetLife's broader benefits offering", owner:"National Accounts AE", timing:"Q4 2026", lob:"U.S. Group Benefits — National Accounts"}
+      ],
+      risks: [
+        {risk:"Upcoming LTD renewal faces increased competitive pressure", value:"~$2.5M premium at risk if Santander moves coverage to another carrier", mitigation:"Engage Santander ahead of renewal to understand concerns, reinforce MetLife's value proposition, and address competitive threats", owner:"National Accounts AE", timing:"Q4 2026", lob:"U.S. Group Benefits — National Accounts"}
+      ]
+    },
+    interactions: [
+      {eventName:"Santander National Accounts SWOT Call", eventDate:"8/12/2026", meetingLevel:"Working level", purpose:"Quarterly review of National Accounts book — LTD renewal risk, Upwise and MetLife Legal pipeline status", metlifeAttendees:"Paz Martinez, Jordan Ellis", counterpartyAttendees:"Santander Benefits Team", selectExecutive:"", rm:"Jordan Ellis", status:"Completed", priority:"Medium", supportRequest:"", notes:"Confirmed Webster census still pending; flagged as at-risk ahead of 1/1/2027 renewal."}
+    ],
+    keyMeetings: [
+      {date:"3/15/2027", label:"Michel Khalaf / Christiana Riley annual check-in"},
+      {date:"11/1/2026", label:"National Accounts LTD renewal discussion"}
+    ]
+  };
+}
+
+/* ============================= STATE / PERSISTENCE ============================= */
+const STORAGE_KEY = "thin_account_v1"; // identifies this document in the shared database
+const API_URL = "/api/data?key=" + encodeURIComponent(STORAGE_KEY);
+
+function defaultAppData(){
+  return {
+    activeAccountId: "acct_santander",
+    accounts: { "acct_santander": defaultSantanderAccount() }
+  };
+}
+
+let appData = defaultAppData();
+let data = appData.accounts[appData.activeAccountId];
+let viewMode = "workspace"; // "workspace" | "inventory"
+let currentPage = 0;
+let saveTimer = null;
+
+const PAGES = [
+  {key:"overview", title:"Business & Strategic Overview", objective:"Confirm the information needed to establish a common understanding of the account and its strategic priorities."},
+  {key:"snapshot", title:"Enterprise-level Snapshot", objective:"Validate the components required to provide a comprehensive view of MetLife's current relationship and business footprint."},
+  {key:"glance", title:"Relationship at a Glance", objective:"Review balance of trade, relative importance, and objectives on both sides of the relationship."},
+  {key:"footprint", title:"LoB-level Details", objective:"Review the account-level business footprint including existing business, pipeline opportunities, and key relationship considerations."},
+  {key:"contacts", title:"Contacts Directory", objective:"One to a few names and email addresses per line of business, so the team always knows who to reach for a given function — and can email the whole group in one click."}
+];
+
+function mergeDuplicateMetrics(metrics){
+  const order = [];
+  const byLabel = {};
+  metrics.forEach(m=>{
+    const key = (m.label||"").trim().toLowerCase();
+    if(!byLabel[key]){
+      byLabel[key] = {label:m.label, regions:(m.regions||[]).slice(), value:m.value||"", notes:m.notes||"", isProfile: !!m.isProfile};
+      order.push(key);
+    } else {
+      const existing = byLabel[key];
+      (m.regions||[]).forEach(r=>{ if(!existing.regions.includes(r)) existing.regions.push(r); });
+      if(!existing.value && m.value) existing.value = m.value;
+      if(!existing.notes && m.notes) existing.notes = m.notes;
+      else if(existing.notes && m.notes && existing.notes!==m.notes) existing.notes = existing.notes+" "+m.notes;
+      if(m.isProfile) existing.isProfile = true;
+    }
+  });
+  return order.map(key=>byLabel[key]);
+}
+function normalizePeople(acc){
+  acc = acc || data;
+  Object.keys(acc.relationshipMap.groups).forEach(groupName=>{
+    acc.relationshipMap.groups[groupName].forEach(p=>{
+      if(typeof p.reportsTo === "string"){ p.reportsTo = p.reportsTo? [p.reportsTo] : []; }
+      if(!Array.isArray(p.reportsTo)) p.reportsTo = [];
+      p.reportsTo = p.reportsTo.slice(0,2);
+      if(typeof p.category !== "string") p.category = "";
+      if(typeof p.buyerSeller !== "string") p.buyerSeller = "N/A";
+      if(typeof p.notes !== "string") p.notes = "";
+    });
+  });
+  if(!acc.relationshipMap.view) acc.relationshipMap.view = "chart";
+}
+
+async function loadData(){
+  try{
+    const r = await fetch(API_URL);
+    if(!r.ok) throw new Error("Server returned "+r.status+" while loading data");
+    const res = await r.json();
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(parsed && parsed.accounts && Object.keys(parsed.accounts).length){
+        appData = parsed;
+        if(!appData.accounts[appData.activeAccountId]){
+          appData.activeAccountId = Object.keys(appData.accounts)[0];
+        }
+        data = appData.accounts[appData.activeAccountId];
+      }
+    }
+  }catch(e){
+    console.warn("ERM tool: no saved data loaded —", e && e.message ? e.message : e);
+  }
+  Object.values(appData.accounts).forEach(acc=>{
+    syncLobsFromHeatmap(acc);
+    normalizePeople(acc);
+    if(!acc.reviewDates) acc.reviewDates = {};
+    if(!acc.overview.opportunityThesis) acc.overview.opportunityThesis = [];
+    if(!Array.isArray(acc.interactions)) acc.interactions = [];
+    if(!Array.isArray(acc.keyMeetings)) acc.keyMeetings = [];
+    if(!Array.isArray(acc.snapshot.metrics)) acc.snapshot.metrics = [];
+    if(Array.isArray(acc.snapshot.demographics) && acc.snapshot.demographics.length){
+      acc.snapshot.demographics.forEach(d=>{
+        acc.snapshot.metrics.push({label:d.metric, regions:d.region? [d.region]:[], value:d.value||"", notes:d.notes||""});
+      });
+      delete acc.snapshot.demographics;
+    }
+    acc.snapshot.metrics.forEach(m=>{
+      if(!Array.isArray(m.regions)){
+        m.regions = (m.region && m.region!=="Global") ? [m.region] : [];
+      }
+      delete m.region;
+      if(typeof m.notes !== "string") m.notes = "";
+      if(typeof m.isProfile !== "boolean") m.isProfile = PROFILE_METRIC_LABELS.includes(m.label);
+    });
+    const headcountDupe = acc.snapshot.metrics.find(m=> m.label==="Employee headcount");
+    if(headcountDupe){
+      const numEmployees = acc.snapshot.metrics.find(m=> m.label==="# of employees");
+      if(numEmployees && headcountDupe.notes && !numEmployees.notes){ numEmployees.notes = headcountDupe.notes; }
+      acc.snapshot.metrics = acc.snapshot.metrics.filter(m=> m.label!=="Employee headcount");
+    }
+    acc.snapshot.metrics = mergeDuplicateMetrics(acc.snapshot.metrics);
+    if(!Array.isArray(acc.snapshot.regionFilter)) acc.snapshot.regionFilter = ["US","LATAM","APAC","EMEA"];
+  });
+  renderAll();
+}
+
+function formatWhen(iso){
+  if(!iso) return "Not edited yet";
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return "Not edited yet";
+  return d.toLocaleString(undefined, {month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit"});
+}
+
+let lastSaveError = "";
+function scheduleSave(){
+  data.lastEdited = new Date().toISOString();
+  if(!data.reviewDates) data.reviewDates = {};
+  const pageKey = PAGES[currentPage] && PAGES[currentPage].key;
+  if(pageKey) data.reviewDates[pageKey] = data.lastEdited;
+  setSaveStatus(true);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{
+      const r = await fetch(API_URL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ value: JSON.stringify(appData) })
+      });
+      const result = await r.json();
+      if(!r.ok || !result || !result.ok){
+        lastSaveError = (result && result.error) ? result.error : ("Save failed (HTTP "+r.status+")");
+        setSaveStatus(false,true);
+      } else {
+        setSaveStatus(false,false);
+      }
+    }catch(e){
+      lastSaveError = (e && e.message) ? e.message : String(e);
+      console.error("ERM tool save failed:", e);
+      setSaveStatus(false,true);
+    }
+    renderLastEditedLabels();
+  }, 500);
+}
+function renderLastEditedLabels(){
+  const sub = document.getElementById("brandSub");
+  if(sub) sub.textContent = viewMode==="workspace" ? "Last edited "+formatWhen(data.lastEdited) : "Shared Account Planning Workspace";
+}
+
+function setSaveStatus(saving, failed){
+  const dot = document.getElementById("saveDot");
+  const text = document.getElementById("saveText");
+  if(saving){ dot.className="dot saving"; text.textContent="Saving…"; text.title=""; }
+  else if(failed){
+    dot.className="dot saving";
+    text.textContent="Save failed — tap to retry";
+    text.title = lastSaveError || "Unknown error";
+    text.style.cursor = "pointer";
+    text.onclick = ()=>{ scheduleSave(); };
+  }
+  else { dot.className="dot"; text.textContent="Saved"; text.title=""; text.style.cursor="default"; text.onclick=null; }
+}
+
+/* ============================= LOB SYNC ============================= */
+function renameLobKey(oldName, newName, acc){
+  acc = acc || data;
+  if(oldName === newName || !oldName) return;
+  if(acc.footprint.lobs[oldName] && !acc.footprint.lobs[newName]){
+    acc.footprint.lobs[newName] = acc.footprint.lobs[oldName];
+    delete acc.footprint.lobs[oldName];
+  }
+  if(acc.contacts && acc.contacts.lobs[oldName] && !acc.contacts.lobs[newName]){
+    acc.contacts.lobs[newName] = acc.contacts.lobs[oldName];
+    delete acc.contacts.lobs[oldName];
+  }
+  if(acc.footprint.activeLob === oldName) acc.footprint.activeLob = newName;
+  if(acc.contacts && acc.contacts.activeLob === oldName) acc.contacts.activeLob = newName;
+  // Growth Opportunities & Risks is now a single enterprise-wide list — just re-tag any rows using the old LOB label
+  (acc.growthRisks.opportunities||[]).forEach(r=>{ if(r.lob===oldName) r.lob=newName; });
+  (acc.growthRisks.risks||[]).forEach(r=>{ if(r.lob===oldName) r.lob=newName; });
+}
+function syncLobsFromHeatmap(acc){
+  acc = acc || data;
+  const names = acc.glance.heatmap.map(h=>h.lob);
+  names.forEach(n=>{
+    if(!acc.footprint.lobs[n]) acc.footprint.lobs[n] = {existing:[], opportunities:[]};
+  });
+  Object.keys(acc.footprint.lobs).forEach(k=>{ if(!names.includes(k)) delete acc.footprint.lobs[k]; });
+  if(names.includes("Global Benefits")){
+    ensureGlobalBenefitsShape(acc.footprint.lobs["Global Benefits"]);
+  }
+  if(!names.includes(acc.footprint.activeLob)) acc.footprint.activeLob = names[0];
+  if(!acc.contacts) acc.contacts = {activeLob: names[0], lobs:{}};
+  names.forEach(n=>{
+    if(!acc.contacts.lobs[n]) acc.contacts.lobs[n] = [];
+  });
+  Object.keys(acc.contacts.lobs).forEach(k=>{ if(!names.includes(k)) delete acc.contacts.lobs[k]; });
+  if(!names.includes(acc.contacts.activeLob)) acc.contacts.activeLob = names[0];
+  if(!acc.growthRisks) acc.growthRisks = {opportunities:[],risks:[]};
+  if(!Array.isArray(acc.growthRisks.opportunities)) acc.growthRisks.opportunities = [];
+  if(!Array.isArray(acc.growthRisks.risks)) acc.growthRisks.risks = [];
+}
+
+/* ============================= DOM HELPERS ============================= */
+function el(tag, attrs, children){
+  const e = document.createElement(tag);
+  if(attrs) for(const k in attrs){
+    if(k==="class") e.className=attrs[k];
+    else if(k==="html") e.innerHTML=attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  if(children) children.forEach(c=>{ if(c) e.appendChild(c); });
+  return e;
+}
+function textInput(value, onChange, placeholder){
+  const i = el("input",{type:"text", placeholder: placeholder||""});
+  i.value = value||"";
+  i.addEventListener("input", ()=>{ onChange(i.value); scheduleSave(); });
+  return i;
+}
+function textArea(value, onChange, placeholder){
+  const t = el("textarea",{placeholder: placeholder||""});
+  t.value = value||"";
+  t.addEventListener("input", ()=>{ onChange(t.value); scheduleSave(); });
+  return t;
+}
+function selectInput(value, options, onChange){
+  const s = el("select",{});
+  options.forEach(opt=>{
+    const o = el("option",{value:opt});
+    o.textContent = opt;
+    if(opt===value) o.selected = true;
+    s.appendChild(o);
+  });
+  s.addEventListener("change", ()=>{ onChange(s.value); scheduleSave(); });
+  return s;
+}
+function field(labelText, inputEl){
+  return el("div",{class:"field"},[ el("label",{},[document.createTextNode(labelText)]), inputEl ]);
+}
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+function bulletList(arr, onUpdate, placeholder){
+  const wrap = el("div",{class:"bullets"});
+  arr.forEach((item, idx)=>{
+    const row = el("div",{class:"bullet-row"});
+    row.appendChild(el("div",{class:"dash"},[document.createTextNode("–")]));
+    const inp = textInput(item, (v)=>{ arr[idx]=v; }, placeholder);
+    row.appendChild(inp);
+    const del = el("button",{class:"icon-btn", title:"Remove"},[document.createTextNode("✕")]);
+    del.addEventListener("click", ()=>{ arr.splice(idx,1); onUpdate(); scheduleSave(); });
+    row.appendChild(del);
+    wrap.appendChild(row);
+  });
+  const add = el("button",{class:"add-link"},[document.createTextNode("+ Add item")]);
+  add.addEventListener("click", ()=>{ arr.push(""); onUpdate(); scheduleSave(); });
+  return el("div",{},[wrap, add]);
+}
+
+function stakeholderTable(arr, onUpdate){
+  return editableTable(arr, [{key:"name",label:"Name"},{key:"title",label:"Title"}], onUpdate, "Add stakeholder");
+}
+
+function editableTable(arr, columns, onUpdate, addLabel){
+  const wrap = el("div",{class:"tablewrap"});
+  const table = el("table",{class:"edit-table"});
+  const headRow = el("tr");
+  columns.forEach(c=> headRow.appendChild(el("th",c.width?{style:"min-width:"+c.width+";"}:{},[document.createTextNode(c.label)])));
+  headRow.appendChild(el("th",{class:"action-col"},[]));
+  table.appendChild(el("thead",{},[headRow]));
+  const tbody = el("tbody");
+  arr.forEach((row,idx)=>{
+    const tr = el("tr");
+    columns.forEach(c=>{
+      const td = el("td",c.width?{style:"min-width:"+c.width+";"}:{});
+      if(c.type==="select"){
+        const sel = selectInput(row[c.key]||(c.options?c.options[0]:""), c.options||[], (v)=>{
+          row[c.key]=v;
+          if(c.onChange){ c.onChange(row, v, arr, idx); }
+          onUpdate();
+        });
+        td.appendChild(sel);
+      }
+      else if(c.type==="iconToggle"){
+        const isOn = row[c.key]==="Yes";
+        const btn = el("button",{class:"icon-toggle"+(isOn?" on":""), title: isOn? (c.onLabel||"At risk — click to clear") : (c.offLabel||"Click to flag at risk")},[document.createTextNode(c.icon||"⚠")]);
+        btn.addEventListener("click", ()=>{
+          row[c.key] = isOn ? "No" : "Yes";
+          if(c.onChange){ c.onChange(row, row[c.key], arr, idx); }
+          onUpdate();
+          scheduleSave();
+        });
+        td.appendChild(btn);
+      }
+      else if(c.type==="actionButton"){
+        const btn = el("button",{class:"btn small"+(c.btnClass? " "+c.btnClass:"")},[document.createTextNode(typeof c.buttonLabel==="function"? c.buttonLabel(row):(c.buttonLabel||"Go"))]);
+        if(c.disabled && c.disabled(row)) btn.setAttribute("disabled","disabled");
+        btn.addEventListener("click", ()=>{ c.onClick(row, arr, idx); });
+        td.appendChild(btn);
+      }
+      else if(c.readOnly){
+        td.appendChild(el("span",{style:"color:#5B6B74;"},[document.createTextNode(row[c.key]||"—")]));
+      }
+      else if(c.wide){ td.appendChild(textArea(row[c.key], (v)=>{row[c.key]=v; if(c.onChange){ c.onChange(row, v, arr, idx); onUpdate(); }})); }
+      else{ td.appendChild(textInput(row[c.key], (v)=>{row[c.key]=v; if(c.onChange){ c.onChange(row, v, arr, idx); onUpdate(); }}, c.placeholder)); }
+      tr.appendChild(td);
+    });
+    const actTd = el("td",{class:"action-col"});
+    const del = el("button",{class:"icon-btn",title:"Remove row"},[document.createTextNode("✕")]);
+    del.addEventListener("click", ()=>{ arr.splice(idx,1); onUpdate(); scheduleSave(); });
+    actTd.appendChild(del);
+    tr.appendChild(actTd);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  const emptyRow = {};
+  columns.forEach(c=> emptyRow[c.key]="");
+  const add = el("button",{class:"add-link"},[document.createTextNode("+ "+(addLabel||"Add row"))]);
+  add.addEventListener("click", ()=>{ arr.push(Object.assign({},emptyRow)); onUpdate(); scheduleSave(); });
+  return el("div",{},[wrap, add]);
+}
+
+function pieSliceColors(){ return ["#122B44","#2E96A6","#6FC1C9","#A9C6CC","#D6E4E7","#8FB6BC","#4C7A8C","#B7CBD1"]; }
+function buildPieSVG(arr, colors){
+  const total = arr.reduce((s,r)=> s + (parseFloat(r.value)||0), 0);
+  const size = 180, cx = size/2, cy = size/2, r = size/2 - 4;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox","0 0 "+size+" "+size);
+  svg.setAttribute("width", size); svg.setAttribute("height", size);
+  if(total<=0){
+    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("cx",cx); circle.setAttribute("cy",cy); circle.setAttribute("r",r);
+    circle.setAttribute("fill","#EEF2F3");
+    svg.appendChild(circle);
+    return svg;
+  }
+  let angleStart = -90;
+  arr.forEach((row,idx)=>{
+    const val = parseFloat(row.value)||0;
+    if(val<=0) return;
+    const angleSpan = (val/total)*360;
+    const angleEnd = angleStart + angleSpan;
+    const largeArc = angleSpan > 180 ? 1 : 0;
+    const x1 = cx + r*Math.cos(angleStart*Math.PI/180);
+    const y1 = cy + r*Math.sin(angleStart*Math.PI/180);
+    const x2 = cx + r*Math.cos(angleEnd*Math.PI/180);
+    const y2 = cy + r*Math.sin(angleEnd*Math.PI/180);
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    const d = (angleSpan>=359.99)
+      ? `M ${cx-r} ${cy} A ${r} ${r} 0 1 1 ${cx+r} ${cy} A ${r} ${r} 0 1 1 ${cx-r} ${cy} Z`
+      : `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+    path.setAttribute("d", d);
+    path.setAttribute("fill", colors[idx%colors.length]);
+    path.setAttribute("stroke","#fff");
+    path.setAttribute("stroke-width","1.5");
+    svg.appendChild(path);
+    angleStart = angleEnd;
+  });
+  return svg;
+}
+function splitBars(arr, onUpdate){
+  const colors = pieSliceColors();
+  const wrap = el("div",{style:"display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;"});
+
+  const left = el("div",{style:"flex:1;min-width:260px;"});
+  const tablewrap = el("div",{class:"tablewrap"});
+  const table = el("table",{class:"edit-table"});
+  table.appendChild(el("thead",{},[el("tr",{},[
+    el("th",{},[document.createTextNode("Category")]),
+    el("th",{},[document.createTextNode("% of revenue")]),
+    el("th",{},[document.createTextNode("")]),
+    el("th",{class:"action-col"},[])
+  ])]));
+  const tbody = el("tbody");
+  arr.forEach((row,idx)=>{
+    const tr = el("tr");
+    const td1 = el("td"); td1.appendChild(textInput(row.label,(v)=>{row.label=v; refreshPie();}));
+    const td2 = el("td");
+    const numIn = el("input",{type:"number",min:"0",max:"100"});
+    numIn.value = row.value;
+    numIn.addEventListener("input", ()=>{ row.value = parseFloat(numIn.value)||0; scheduleSave(); refreshPie(); });
+    td2.appendChild(numIn);
+    const td3 = el("td");
+    const swatch = el("span",{style:`display:inline-block;width:12px;height:12px;border-radius:3px;background:${colors[idx%colors.length]};`});
+    td3.appendChild(swatch);
+    const td4 = el("td",{class:"action-col"});
+    const del = el("button",{class:"icon-btn",title:"Remove"},[document.createTextNode("✕")]);
+    del.addEventListener("click", ()=>{ arr.splice(idx,1); onUpdate(); scheduleSave(); });
+    td4.appendChild(del);
+    tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  tablewrap.appendChild(table);
+  left.appendChild(tablewrap);
+  const add = el("button",{class:"add-link"},[document.createTextNode("+ Add category")]);
+  add.addEventListener("click", ()=>{ arr.push({label:"",value:0}); onUpdate(); scheduleSave(); });
+  left.appendChild(add);
+
+  const right = el("div",{style:"flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:6px;"});
+  const pieHolder = el("div",{});
+  right.appendChild(pieHolder);
+  function refreshPie(){
+    pieHolder.innerHTML = "";
+    pieHolder.appendChild(buildPieSVG(arr, colors));
+  }
+  refreshPie();
+
+  wrap.appendChild(left);
+  wrap.appendChild(right);
+  return wrap;
+}
+
+/* ============================= PAGE RENDERERS ============================= */
+function openAccount(id){
+  if(!appData.accounts[id]) return;
+  appData.activeAccountId = id;
+  data = appData.accounts[id];
+  viewMode = "workspace";
+  currentPage = 0;
+  renderAll();
+}
+function addAccount(name){
+  const id = "acct_"+Date.now();
+  appData.accounts[id] = blankAccountData(name);
+  openAccount(id);
+  scheduleSave();
+}
+function removeAccount(id){
+  const ids = Object.keys(appData.accounts);
+  if(ids.length<=1){ toast("Keep at least one account in the inventory"); return; }
+  const acc = appData.accounts[id];
+  if(!confirm('Remove "'+(acc.accountName||"this account")+'" from the inventory? This can\'t be undone.')) return;
+  delete appData.accounts[id];
+  if(appData.activeAccountId===id){
+    const remaining = Object.keys(appData.accounts);
+    appData.activeAccountId = remaining[0];
+    data = appData.accounts[remaining[0]];
+  }
+  renderAll();
+  scheduleSave();
+}
+
+function renderNav(){
+  const nav = document.getElementById("navList");
+  nav.innerHTML = "";
+  PAGES.forEach((p,idx)=>{
+    const btn = el("button",{class:"nav-item"+(idx===currentPage?" active":"")});
+    btn.appendChild(el("span",{class:"num"},[document.createTextNode(String(idx+1))]));
+    btn.appendChild(el("span",{class:"label"},[document.createTextNode(p.title)]));
+    btn.addEventListener("click", ()=>{ currentPage = idx; renderAll(); });
+    nav.appendChild(btn);
+  });
+  document.getElementById("acctTitle").textContent = data.accountName;
+  renderLastEditedLabels();
+}
+function renderHeader(){
+  const p = PAGES[currentPage];
+  document.getElementById("pageTitle").textContent = (currentPage+1)+". "+p.title;
+  document.getElementById("pageObjective").textContent = p.objective;
+  document.getElementById("stepper").textContent = "Page "+(currentPage+1)+" of "+PAGES.length;
+  document.getElementById("prevBtn").disabled = currentPage===0;
+  document.getElementById("prevBtn").style.opacity = currentPage===0? "0.4":"1";
+  document.getElementById("nextBtn").disabled = currentPage===PAGES.length-1;
+  document.getElementById("nextBtn").style.opacity = currentPage===PAGES.length-1? "0.4":"1";
+}
+function daysSince(iso){
+  if(!iso) return null;
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return null;
+  return Math.floor((Date.now()-d.getTime())/86400000);
+}
+function renderReviewTag(pageKey){
+  if(!data.reviewDates) data.reviewDates = {};
+  const iso = data.reviewDates[pageKey] || "";
+  const days = daysSince(iso);
+  const stale = days!==null && days > 365;
+
+  const bar = el("div",{class:"card", style:"padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#F4F8F9;"});
+  bar.appendChild(el("span",{style:"font-size:12.5px;font-weight:700;color:#1B3B5C;"},[document.createTextNode("Last reviewed")]));
+  if(!iso){
+    bar.appendChild(el("span",{style:"font-size:12px;color:#5B6B74;"},[document.createTextNode("Not yet edited")]));
+  } else {
+    bar.appendChild(el("span",{style:"font-size:12px;color:#1E2A32;"},[document.createTextNode(formatWhen(iso))]));
+    if(stale){
+      bar.appendChild(el("span",{style:"font-size:12px;font-weight:700;color:#fff;background:#B23A48;padding:3px 9px;border-radius:10px;"},[document.createTextNode("Review overdue — "+days+" days since last edit")]));
+    } else {
+      bar.appendChild(el("span",{style:"font-size:12px;color:#5B6B74;"},[document.createTextNode(days+" days since last edit")]));
+    }
+  }
+  return bar;
+}
+function renderPage(){
+  const root = document.getElementById("pageContent");
+  root.innerHTML = "";
+  const key = PAGES[currentPage].key;
+  root.appendChild(renderReviewTag(key));
+  if(key==="overview") root.appendChild(renderOverview());
+  if(key==="snapshot") root.appendChild(renderSnapshot());
+  if(key==="glance") root.appendChild(renderGlance());
+  if(key==="footprint") root.appendChild(renderFootprint());
+  if(key==="contacts") root.appendChild(renderContacts());
+}
+
+function acctStatusColor(status){
+  if(status==="Strong") return "#12395C";
+  if(status==="Stable") return "#2E96A6";
+  if(status==="Developing") return "#8FCAD1";
+  if(status==="At risk") return "#C9D8DC";
+  return "#EEF2F3";
+}
+function renderInventory(){
+  const wrap = el("div",{},[]);
+  const note = el("div",{class:"shared-note"});
+  note.appendChild(document.createTextNode("This workspace is shared — everyone who opens this tool sees the same accounts and edits."));
+  wrap.appendChild(note);
+
+  const grid = el("div",{class:"acctgrid"});
+  Object.keys(appData.accounts).forEach(id=>{
+    const acc = appData.accounts[id];
+    const card = el("div",{class:"acctcard"+(id===appData.activeAccountId?" active-account":"")});
+    const top = el("div",{class:"acctcard-top"});
+    const nameCol = el("div",{});
+    nameCol.appendChild(el("div",{class:"acctcard-name"},[document.createTextNode(acc.accountName||"(unnamed account)")]));
+    nameCol.appendChild(el("div",{class:"acctcard-tier"},[document.createTextNode(acc.tier||"")]));
+    top.appendChild(nameCol);
+    const statusColor = acctStatusColor(acc.glance.overallStatus);
+    const statusPill = el("div",{class:"acctcard-status", style:"background:"+statusColor+";color:"+(statusColor==="#EEF2F3"||statusColor==="#8FCAD1"||statusColor==="#C9D8DC"?"#0E2C3E":"#fff")+";"});
+    statusPill.appendChild(document.createTextNode(acc.glance.overallStatus||""));
+    top.appendChild(statusPill);
+    card.appendChild(top);
+
+    const stats = el("div",{class:"acctcard-stats"});
+    stats.appendChild(el("span",{},[document.createTextNode("In: "), el("b",{},[document.createTextNode(acc.glance.inAmount||"—")])]));
+    stats.appendChild(el("span",{},[document.createTextNode("Out: "), el("b",{},[document.createTextNode(acc.glance.outAmount||"—")])]));
+    stats.appendChild(el("span",{},[document.createTextNode("Stakeholders: "), el("b",{},[document.createTextNode(String(acc.overview.stakeholders.length))])]));
+    card.appendChild(stats);
+
+    const editedRow = el("div",{style:"font-size:11.5px;color:var(--sub);margin-top:8px;"});
+    editedRow.appendChild(document.createTextNode("Last edited: "+formatWhen(acc.lastEdited)));
+    card.appendChild(editedRow);
+
+    if(Object.keys(appData.accounts).length>1){
+      const del = el("button",{class:"icon-btn acctcard-remove", title:"Remove account"},[document.createTextNode("✕")]);
+      del.addEventListener("click", (e)=>{ e.stopPropagation(); removeAccount(id); });
+      card.appendChild(del);
+    }
+    card.addEventListener("click", ()=> openAccount(id));
+    grid.appendChild(card);
+  });
+
+  const addCard = el("div",{class:"new-acct-card"},[document.createTextNode("+ Add account")]);
+  addCard.addEventListener("click", ()=>{
+    const name = prompt("Account name (e.g. Fidelity, JPMorgan):");
+    if(!name || !name.trim()) return;
+    addAccount(name.trim());
+  });
+  grid.appendChild(addCard);
+
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function renderAll(){
+  renderNav();
+  const isWorkspace = viewMode==="workspace";
+  document.getElementById("topbarActions").style.display = isWorkspace ? "flex" : "none";
+  document.getElementById("pageFooter").style.display = isWorkspace ? "flex" : "none";
+  const root = document.getElementById("pageContent");
+  root.innerHTML = "";
+  if(isWorkspace){
+    renderHeader();
+    renderPage();
+  } else {
+    document.getElementById("pageTitle").textContent = "All Accounts";
+    document.getElementById("pageObjective").textContent = "Open an existing account to plan it, or add a new one to the shared inventory.";
+    root.appendChild(renderInventory());
+  }
+}
+
+/* ---- Page 1: Overview ---- */
+function renderOverview(){
+  const c1 = el("div",{class:"card"});
+  c1.appendChild(el("h2",{},[document.createTextNode("Account identity")]));
+  const grid = el("div",{class:"grid cols-2"});
+  grid.appendChild(field("Account name", textInput(data.accountName,(v)=>{data.accountName=v; document.getElementById("acctTitle").textContent=v;})));
+  grid.appendChild(field("Tier", selectInput(data.tier, ["Tier 1","Tier 2"], (v)=>{data.tier=v;})));
+  c1.appendChild(grid);
+
+  const c3 = el("div",{class:"card"});
+  c3.appendChild(el("h2",{},[document.createTextNode("Tier rationale")]));
+  c3.appendChild(el("p",{class:"hint"},[document.createTextNode("Why this account sits at its current tier.")]));
+  c3.appendChild(bulletList(data.overview.rationale, renderPage));
+
+  const c3b = el("div",{class:"card"});
+  c3b.appendChild(el("h2",{},[document.createTextNode("Pipeline opportunity thesis")]));
+  c3b.appendChild(el("p",{class:"hint"},[document.createTextNode("For every dollar figure above, write down what the opportunity actually is — so it's clear what to kill later if it's no longer relevant, instead of a number sitting here indefinitely.")]));
+  if(!data.overview.opportunityThesis) data.overview.opportunityThesis = [];
+  c3b.appendChild(bulletList(data.overview.opportunityThesis, renderPage));
+
+  const c4 = el("div",{class:"card"});
+  c4.appendChild(el("h2",{},[document.createTextNode("Key MetLife stakeholders")]));
+  c4.appendChild(stakeholderTable(data.overview.stakeholders, renderPage));
+
+  return el("div",{},[c1,c3,c3b,c4]);
+}
+
+/* ---- Page 2: Snapshot ---- */
+const METRIC_REGION_OPTIONS = ["US","LATAM","APAC","EMEA"];
+const PROFILE_METRIC_LABELS = ["Stock price","Headquarters","Year founded","Partnerships & JVs (insurance)","Balance sheet / trust assets"];
+function renderProfileTable(){
+  const card = el("div",{class:"card"});
+  card.appendChild(el("h2",{},[document.createTextNode("Company profile")]));
+  card.appendChild(el("p",{class:"hint"},[document.createTextNode("Company-wide facts that don't vary by region, so they're not subject to the region filter below.")]));
+
+  const wrap = el("div",{class:"tablewrap"});
+  const table = el("table",{class:"edit-table"});
+  table.appendChild(el("thead",{},[el("tr",{},[
+    el("th",{},[document.createTextNode("Fact")]),
+    el("th",{},[document.createTextNode("Value")]),
+    el("th",{},[document.createTextNode("Notes")]),
+    el("th",{class:"action-col"},[])
+  ])]));
+  const tbody = el("tbody");
+  const visible = data.snapshot.metrics.filter(m=> m.isProfile);
+  visible.forEach(row=>{
+    const idx = data.snapshot.metrics.indexOf(row);
+    const tr = el("tr");
+    const td1 = el("td"); td1.appendChild(textInput(row.label, (v)=>{row.label=v;}));
+    const td3 = el("td");
+    td3.appendChild(el("span",{style:"font-weight:700;color:#1E2A32;"},[document.createTextNode(row.value || "Pending auto-refresh")]));
+    const td4 = el("td"); td4.appendChild(textInput(row.notes, (v)=>{row.notes=v;}, "Optional notes"));
+    const td5 = el("td",{class:"action-col"});
+    const del = el("button",{class:"icon-btn",title:"Remove row"},[document.createTextNode("✕")]);
+    del.addEventListener("click", ()=>{ data.snapshot.metrics.splice(idx,1); renderPage(); scheduleSave(); });
+    td5.appendChild(del);
+    [td1,td3,td4,td5].forEach(td=>tr.appendChild(td));
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  card.appendChild(wrap);
+  const add = el("button",{class:"add-link"},[document.createTextNode("+ Add profile fact")]);
+  add.style.marginTop = "10px";
+  add.addEventListener("click", ()=>{ data.snapshot.metrics.push({label:"", regions:[], value:"", notes:"", isProfile:true}); renderPage(); scheduleSave(); });
+  card.appendChild(add);
+
+  return card;
+}
+function renderMetricsTable(){
+  const rf = data.snapshot.regionFilter;
+  const allSelected = METRIC_REGION_OPTIONS.every(r=>rf.includes(r));
+
+  const card = el("div",{class:"card"});
+  card.appendChild(el("h2",{},[document.createTextNode("Business performance metrics")]));
+  card.appendChild(el("p",{class:"hint"},[document.createTextNode("Values refresh automatically (via AI) and aren't manually editable here. Metrics with no region set always show; regional metrics — retail customers, etc. — filter with the region toggles below.")]));
+
+  const filterBar = el("div",{style:"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:#F4F8F9;border-radius:8px;"});
+  filterBar.appendChild(el("span",{style:"font-size:12px;font-weight:700;color:#1B3B5C;"},[document.createTextNode("Region")]));
+  const allLabel = el("label",{style:"display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer;"});
+  const allCheckbox = el("input",{type:"checkbox"});
+  allCheckbox.checked = allSelected;
+  allCheckbox.addEventListener("change", ()=>{
+    data.snapshot.regionFilter = allCheckbox.checked ? METRIC_REGION_OPTIONS.slice() : [];
+    renderPage();
+    scheduleSave();
+  });
+  allLabel.appendChild(allCheckbox);
+  allLabel.appendChild(document.createTextNode("All"));
+  filterBar.appendChild(allLabel);
+  METRIC_REGION_OPTIONS.forEach(region=>{
+    const label = el("label",{style:"display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer;"});
+    const cb = el("input",{type:"checkbox"});
+    cb.checked = rf.includes(region);
+    cb.addEventListener("change", ()=>{
+      if(cb.checked){ if(!data.snapshot.regionFilter.includes(region)) data.snapshot.regionFilter.push(region); }
+      else { data.snapshot.regionFilter = data.snapshot.regionFilter.filter(r=>r!==region); }
+      renderPage();
+      scheduleSave();
+    });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(region));
+    filterBar.appendChild(label);
+  });
+  const dedupeBtn = el("button",{class:"btn small", style:"margin-left:auto;"},[document.createTextNode("Remove duplicates")]);
+  dedupeBtn.addEventListener("click", ()=>{
+    const before = data.snapshot.metrics.length;
+    data.snapshot.metrics = mergeDuplicateMetrics(data.snapshot.metrics);
+    const removed = before - data.snapshot.metrics.length;
+    renderPage();
+    scheduleSave();
+    toast(removed ? removed+" duplicate metric(s) merged" : "No duplicates found");
+  });
+  filterBar.appendChild(dedupeBtn);
+  card.appendChild(filterBar);
+
+  const wrap = el("div",{class:"tablewrap"});
+  const table = el("table",{class:"edit-table"});
+  table.appendChild(el("thead",{},[el("tr",{},[
+    el("th",{},[document.createTextNode("Metric")]),
+    el("th",{},[document.createTextNode("Value")]),
+    el("th",{},[document.createTextNode("Notes")]),
+    el("th",{class:"action-col"},[])
+  ])]));
+  const tbody = el("tbody");
+  const visible = data.snapshot.metrics.filter(m=> !m.isProfile && (!m.regions.length || m.regions.some(r=>rf.includes(r))));
+  visible.forEach(row=>{
+    const idx = data.snapshot.metrics.indexOf(row);
+    const tr = el("tr");
+    const td1 = el("td"); td1.appendChild(textInput(row.label, (v)=>{row.label=v;}));
+    const td3 = el("td");
+    td3.appendChild(el("span",{style:"font-weight:700;color:#1E2A32;"},[document.createTextNode(row.value || "Pending auto-refresh")]));
+    const td4 = el("td"); td4.appendChild(textInput(row.notes, (v)=>{row.notes=v;}, "Optional notes"));
+    const td5 = el("td",{class:"action-col"});
+    const del = el("button",{class:"icon-btn",title:"Remove row"},[document.createTextNode("✕")]);
+    del.addEventListener("click", ()=>{ data.snapshot.metrics.splice(idx,1); renderPage(); scheduleSave(); });
+    td5.appendChild(del);
+    [td1,td3,td4,td5].forEach(td=>tr.appendChild(td));
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  card.appendChild(wrap);
+  const add = el("button",{class:"add-link"},[document.createTextNode("+ Add metric")]);
+  add.style.marginTop = "10px";
+  add.addEventListener("click", ()=>{ data.snapshot.metrics.push({label:"", regions:[], value:"", notes:""}); renderPage(); scheduleSave(); });
+  card.appendChild(add);
+
+  return card;
+}
+function renderSnapshot(){
+  const c0 = renderProfileTable();
+  const c1 = renderMetricsTable();
+
+  const c2 = el("div",{class:"card"});
+  c2.appendChild(el("h2",{},[document.createTextNode("Recent developments")]));
+  c2.appendChild(bulletList(data.snapshot.developments, renderPage));
+
+  const c3 = el("div",{class:"card"});
+  c3.appendChild(el("h2",{},[document.createTextNode("Priorities")]));
+  c3.appendChild(bulletList(data.snapshot.priorities, renderPage));
+
+  const c4 = el("div",{class:"card"});
+  c4.appendChild(el("h2",{},[document.createTextNode("Business performance narrative")]));
+  c4.appendChild(bulletList(data.snapshot.performance, renderPage));
+
+  return el("div",{},[c0,c1,c2,c3,c4]);
+}
+
+/* ---- Page 3: Relationship at a Glance ---- */
+function pillClass(type){
+  if(type==="Existing Relationship") return "pill existing";
+  if(type==="Whitespace Opportunity") return "pill whitespace";
+  return "pill na";
+}
+function renderHeatCard(row, arr, idx){
+  const card = el("div",{class:"heatcard"});
+  const top = el("div",{class:"heatcard-top"});
+  const nameInput = el("input",{class:"heatcard-name", type:"text"});
+  nameInput.value = row.lob;
+  nameInput.addEventListener("input", ()=>{
+    const oldName = row.lob;
+    const newName = nameInput.value;
+    if(oldName !== newName){
+      renameLobKey(oldName, newName);
+      row.lob = newName;
+      syncLobsFromHeatmap();
+    }
+    scheduleSave();
+  });
+  top.appendChild(nameInput);
+
+  const pillWrap = el("select",{class:pillClass(row.type)+" pill-select"});
+  HEAT_TYPES.forEach(t=>{
+    const o = el("option",{value:t}); o.textContent = t; if(t===row.type) o.selected = true;
+    pillWrap.appendChild(o);
+  });
+  pillWrap.addEventListener("change", ()=>{
+    row.type = pillWrap.value;
+    pillWrap.className = pillClass(row.type)+" pill-select";
+    scheduleSave();
+  });
+  top.appendChild(pillWrap);
+  card.appendChild(top);
+
+  const valInput = el("input",{class:"heatcard-value", type:"text", placeholder:"Value / pipeline"});
+  valInput.value = row.value;
+  valInput.addEventListener("input", ()=>{ row.value = valInput.value; scheduleSave(); });
+  card.appendChild(valInput);
+
+  const del = el("button",{class:"icon-btn heatcard-remove", title:"Remove line of business"},[document.createTextNode("✕")]);
+  del.addEventListener("click", ()=>{
+    arr.splice(idx,1);
+    syncLobsFromHeatmap();
+    renderPage();
+    scheduleSave();
+  });
+  card.appendChild(del);
+  return card;
+}
+function renderGlance(){
+  const g = data.glance;
+  const c1 = el("div",{class:"card"});
+  c1.appendChild(el("h2",{},[document.createTextNode("Balance of trade & standing")]));
+  const grid = el("div",{class:"grid cols-4"});
+  grid.appendChild(field("Overall relationship status", selectInput(g.overallStatus, STATUS_OPTIONS, (v)=>{g.overallStatus=v;})));
+  grid.appendChild(field("Annual value — In", textInput(g.inAmount,(v)=>{g.inAmount=v;})));
+  grid.appendChild(field("Annual value — Out", textInput(g.outAmount,(v)=>{g.outAmount=v;})));
+  grid.appendChild(field("Importance to MetLife", selectInput(g.importanceToMetlife, IMPORTANCE_OPTIONS, (v)=>{g.importanceToMetlife=v;})));
+  c1.appendChild(grid);
+  const grid2 = el("div",{class:"grid cols-4"});
+  grid2.appendChild(field("Importance to "+data.accountName, selectInput(g.importanceToSantander, IMPORTANCE_OPTIONS, (v)=>{g.importanceToSantander=v;})));
+  c1.appendChild(grid2);
+
+  const c2 = el("div",{class:"card"});
+  c2.appendChild(el("h2",{},[document.createTextNode("What MetLife wants from "+data.accountName)]));
+  c2.appendChild(bulletList(g.metlifeObjectives, renderPage));
+
+  const c3 = el("div",{class:"card"});
+  c3.appendChild(el("h2",{},[document.createTextNode("What "+data.accountName+" wants from MetLife")]));
+  c3.appendChild(bulletList(g.santanderObjectives, renderPage));
+
+  const c4 = el("div",{class:"card"});
+  c4.appendChild(el("h2",{},[document.createTextNode("Business heatmap")]));
+  c4.appendChild(el("p",{class:"hint"},[document.createTextNode("This is the master list of lines of business. Adding or removing one here automatically updates the LoB tabs on the Business Footprint and Contacts Directory pages.")]));
+  const grid3 = el("div",{class:"heatgrid"});
+  g.heatmap.forEach((row,idx)=> grid3.appendChild(renderHeatCard(row, g.heatmap, idx)));
+  c4.appendChild(grid3);
+  const add = el("button",{class:"add-link"},[document.createTextNode("+ Add line of business")]);
+  add.style.marginTop = "12px";
+  add.addEventListener("click", ()=>{
+    g.heatmap.push({lob:"New Line of Business", value:"", type:"N/A"});
+    syncLobsFromHeatmap();
+    renderPage();
+    scheduleSave();
+  });
+  c4.appendChild(add);
+
+  return el("div",{},[c1,c2,c3,c4]);
+}
+
+/* ---- Page 4: Business Footprint (LoB details) ---- */
+function renderLobTabs(names, active, onSelect){
+  const tabs = el("div",{class:"lobtabs"});
+  names.forEach(name=>{
+    const t = el("button",{class:"lobtab"+(name===active?" active":"")},[document.createTextNode(name)]);
+    t.addEventListener("click", ()=> onSelect(name));
+    tabs.appendChild(t);
+  });
+  return tabs;
+}
+const GB_REGIONS = ["LATAM","APAC","EMEA"];
+const RENEWAL_TRACKED_LOBS = ["U.S. Group Benefits — National Accounts","Global Benefits"];
+const AWARDED_OPTIONS = ["—","Pending","Awarded","Lost"];
+const RENEWAL_CYCLE_OPTIONS = ["6","12","18","24","36"];
+function computeRenewalDate(effectiveDateStr, cycleMonths){
+  const d = parseLooseDate(effectiveDateStr);
+  if(!d) return "";
+  const months = parseInt(cycleMonths,10) || 12;
+  const nd = new Date(d.getFullYear(), d.getMonth()+months, d.getDate());
+  return (nd.getMonth()+1)+"/"+nd.getDate()+"/"+nd.getFullYear();
+}
+function recalcNextRenewal(row){
+  if(row.effective){
+    row.nextRenewal = computeRenewalDate(row.effective, row.renewalCycleMonths||"12");
+  }
+}
+function blankLobBucket(){ return {existing:[], opportunities:[]}; }
+function ensureGlobalBenefitsShape(lob){
+  if(!lob.regions){
+    // migrate a flat lob into the regional shape, defaulting existing content to LATAM
+    const migrated = {existing: lob.existing||[], opportunities: lob.opportunities||[]};
+    lob.regions = {LATAM: migrated, APAC: blankLobBucket(), EMEA: blankLobBucket()};
+    delete lob.existing; delete lob.opportunities;
+  }
+  GB_REGIONS.forEach(r=>{ if(!lob.regions[r]) lob.regions[r] = blankLobBucket(); });
+  if(!lob.attributes) lob.attributes = {maxisClient:"", maxisType:"", maxisOtherDescription:"", notes:""};
+  if(!lob.activeRegion || !GB_REGIONS.includes(lob.activeRegion)) lob.activeRegion = GB_REGIONS[0];
+  return lob;
+}
+function renderExistingOpportunityTables(activeLob, bucket, tracksRenewal){
+  const existingCols = [
+    {key:"business", label:"Business"},
+    {key:"amount", label:"Amount"}
+  ];
+  if(tracksRenewal){ existingCols.push({key:"broker", label:"Broker"}); }
+  existingCols.push({key:"effective", label:"Effective", onChange: tracksRenewal ? (row)=>{ recalcNextRenewal(row); } : undefined});
+  if(tracksRenewal){
+    existingCols.push({key:"renewalCycleMonths", label:"Renewal cycle (months)", type:"select", options: RENEWAL_CYCLE_OPTIONS, onChange:(row)=>{ recalcNextRenewal(row); }});
+    existingCols.push({key:"nextRenewal", label:"Next renewal", readOnly:true});
+  }
+  existingCols.push({key:"renewed", label:"Renewed"});
+  existingCols.push({key:"atRisk", label:"At risk?", type:"iconToggle", icon:"⚠"});
+  existingCols.push({key:"notes", label:"Notes", wide:true});
+
+  const c1 = el("div",{class:"card"});
+  c1.appendChild(el("h2",{},[document.createTextNode("Existing business — "+activeLob)]));
+  if(tracksRenewal){
+    c1.appendChild(el("p",{class:"hint"},[document.createTextNode("Broker and renewal cycle are tracked for National Accounts and Global Benefits. The next renewal date is calculated automatically from the effective date and cycle length. Flag \u201cAt risk\u201d instead of adding a separate row — MetLife is typically notified when a client places a line at risk.")]));
+  } else {
+    c1.appendChild(el("p",{class:"hint"},[document.createTextNode("Flag \u201cAt risk\u201d instead of adding a separate row for at-risk business.")]));
+  }
+  c1.appendChild(editableTable(bucket.existing, existingCols, renderPage, "Add existing business line"));
+
+  const c2 = el("div",{class:"card"});
+  c2.appendChild(el("h2",{},[document.createTextNode("Opportunities — "+activeLob)]));
+  c2.appendChild(el("p",{class:"hint"},[document.createTextNode("Setting Awarded moves the row into Existing business automatically — the effective date is left blank as a prompt to fill it in.")]));
+  c2.appendChild(editableTable(bucket.opportunities, [
+    {key:"opportunity", label:"Opportunity"},
+    {key:"amount", label:"Amount"},
+    {key:"effective", label:"Effective"},
+    {key:"owner", label:"Owner"},
+    {key:"target", label:"Target date"},
+    {key:"awarded", label:"Status", type:"select", options: AWARDED_OPTIONS, onChange:(row, v, arr, idx)=>{
+      if(v==="Awarded"){
+        arr.splice(idx,1);
+        const newRow = {business: row.opportunity, amount: row.amount, effective:"", renewed:"Pending entry", atRisk:"No", notes: (row.notes? row.notes+" — ":"")+"Awarded — enter effective date"};
+        if(tracksRenewal){ newRow.broker = ""; newRow.renewalCycleMonths = ""; newRow.nextRenewal = ""; }
+        bucket.existing.push(newRow);
+      }
+    }},
+    {key:"notes", label:"Notes", wide:true}
+  ], renderPage, "Add opportunity"));
+
+  return [c1,c2];
+}
+function renderFootprint(){
+  const f = data.footprint;
+  const lobNames = data.glance.heatmap.map(h=>h.lob);
+  if(!lobNames.includes(f.activeLob)) f.activeLob = lobNames[0];
+
+  const tabs = renderLobTabs(lobNames, f.activeLob, (name)=>{ f.activeLob=name; renderPage(); });
+  const hint = el("p",{class:"hint"},[document.createTextNode("Lines of business come from the heatmap on the Relationship at a Glance page.")]);
+  const tracksRenewal = RENEWAL_TRACKED_LOBS.includes(f.activeLob);
+
+  if(f.activeLob === "Global Benefits"){
+    const lob = ensureGlobalBenefitsShape(f.lobs["Global Benefits"] || (f.lobs["Global Benefits"]={}));
+    const regionTabs = el("div",{class:"lobtabs", style:"margin-bottom:4px;"});
+    GB_REGIONS.forEach(r=>{
+      const t = el("button",{class:"lobtab"+(r===lob.activeRegion?" active":"")},[document.createTextNode(r)]);
+      t.addEventListener("click", ()=>{ lob.activeRegion=r; renderPage(); });
+      regionTabs.appendChild(t);
+    });
+    const regionHint = el("p",{class:"hint"},[document.createTextNode("Global Benefits business is tracked separately by region.")]);
+    const bucket = lob.regions[lob.activeRegion];
+    const tables = renderExistingOpportunityTables("Global Benefits — "+lob.activeRegion, bucket, tracksRenewal);
+
+    const attrs = lob.attributes;
+    const c3 = el("div",{class:"card"});
+    c3.appendChild(el("h2",{},[document.createTextNode("Global Benefits — additional attributes")]));
+    c3.appendChild(el("p",{class:"hint"},[document.createTextNode("MAXIS is MetLife's global employee benefits joint venture — flag whether "+data.accountName+" is a MAXIS client (applies across regions).")]));
+    const grid = el("div",{class:"grid cols-4"});
+    grid.appendChild(field("MAXIS client?", selectInput(attrs.maxisClient||"", ["","Yes","No"], (v)=>{attrs.maxisClient=v; renderPage();})));
+    if(attrs.maxisClient==="Yes"){
+      grid.appendChild(field("Type", selectInput(attrs.maxisType||"", ["","Captive","Pool","GRS","Other"], (v)=>{attrs.maxisType=v; renderPage();})));
+    }
+    c3.appendChild(grid);
+    if(attrs.maxisClient==="Yes" && attrs.maxisType==="Other"){
+      c3.appendChild(field("Please describe", textInput(attrs.maxisOtherDescription, (v)=>{attrs.maxisOtherDescription=v;}, "Describe the MAXIS solution type")));
+    }
+    c3.appendChild(field("Notes (e.g. total cap size)", textArea(attrs.notes, (v)=>{attrs.notes=v;}, "Free text — e.g. total size of the cap")));
+
+    return el("div",{},[tabs,hint,regionTabs,regionHint,...tables,c3]);
+  }
+
+  const lob = f.lobs[f.activeLob] || {existing:[],opportunities:[]};
+  const tables = renderExistingOpportunityTables(f.activeLob, lob, tracksRenewal);
+  return el("div",{},[tabs,hint,...tables]);
+}
+
+/* ---- Page 5: Relationship Map ---- */
+function renderMap(){
+  const m = data.relationshipMap;
+  const groupNames = Object.keys(m.groups);
+  if(!m.groups[m.activeGroup]) m.activeGroup = groupNames[0];
+  const arr = m.groups[m.activeGroup];
+
+  const tabs = el("div",{class:"lobtabs"});
+  function renameGroup(oldName, newName){
+    newName = (newName||"").trim();
+    if(!newName || newName===oldName) return;
+    if(m.groups[newName]){ toast("That business name already exists"); return; }
+    const newGroups = {};
+    Object.keys(m.groups).forEach(k=>{
+      newGroups[k===oldName ? newName : k] = m.groups[k];
+    });
+    m.groups = newGroups;
+    if(m.activeGroup===oldName) m.activeGroup = newName;
+    renderPage();
+    scheduleSave();
+  }
+  groupNames.forEach(name=>{
+    const t = el("button",{class:"lobtab"+(name===m.activeGroup?" active":"")});
+    t.appendChild(document.createTextNode(name));
+    const edit = el("span",{class:"x", title:"Rename"},[document.createTextNode("✎")]);
+    edit.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      const newName = prompt("Rename business", name);
+      if(newName!==null) renameGroup(name, newName);
+    });
+    t.appendChild(edit);
+    if(groupNames.length>1){
+      const x = el("span",{class:"x"},[document.createTextNode("✕")]);
+      x.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        if(!confirm('Remove "'+name+'" and all its stakeholders?')) return;
+        delete m.groups[name];
+        const remaining = Object.keys(m.groups);
+        m.activeGroup = remaining[0];
+        renderPage();
+        scheduleSave();
+      });
+      t.appendChild(x);
+    }
+    t.addEventListener("click", ()=>{ m.activeGroup=name; renderPage(); });
+    tabs.appendChild(t);
+  });
+  const addTab = el("button",{class:"lobtab"},[document.createTextNode("+ Add business")]);
+  addTab.addEventListener("click", ()=> showAddGroupForm());
+  tabs.appendChild(addTab);
+
+  const formHolder = el("div",{id:"addGroupFormHolder"});
+  function showAddGroupForm(){
+    formHolder.innerHTML = "";
+    const form = el("div",{class:"tab-add-form"});
+    const input = el("input",{type:"text", placeholder:"e.g. Santander Asset Management"});
+    const okBtn = el("button",{class:"btn small primary"},[document.createTextNode("Add")]);
+    const cancelBtn = el("button",{class:"btn small ghost"},[document.createTextNode("Cancel")]);
+    okBtn.addEventListener("click", ()=>{
+      const name = input.value.trim();
+      if(!name) return;
+      if(m.groups[name]){ toast("That business already exists"); return; }
+      m.groups[name] = [];
+      m.activeGroup = name;
+      renderPage();
+      scheduleSave();
+    });
+    cancelBtn.addEventListener("click", ()=>{ formHolder.innerHTML=""; });
+    form.appendChild(input); form.appendChild(okBtn); form.appendChild(cancelBtn);
+    formHolder.appendChild(form);
+    input.focus();
+  }
+
+  const togglebar = el("div",{class:"togglebar"});
+  const chartBtn = el("button",{class:"toggle-btn"+(m.view==="chart"?" active":"")},[document.createTextNode("By function")]);
+  const listBtn = el("button",{class:"toggle-btn"+(m.view!=="chart"?" active":"")},[document.createTextNode("Edit list")]);
+  chartBtn.addEventListener("click", ()=>{ m.view="chart"; renderPage(); });
+  listBtn.addEventListener("click", ()=>{ m.view="list"; renderPage(); });
+  togglebar.appendChild(chartBtn); togglebar.appendChild(listBtn);
+
+  const heading = el("div",{});
+  heading.appendChild(el("h2",{style:"margin-bottom:4px;"},[document.createTextNode(m.activeGroup+" — stakeholders")]));
+  heading.appendChild(el("p",{class:"hint"},[document.createTextNode("Grouped by function, like a coverage team page — not a repeated hierarchy of every individual reporting line. Track relationship strength, MetLife owner (comma-separate if more than one person owns this contact), buyer/seller role, and notes per contact.")]));
+
+  const body = el("div",{});
+  body.appendChild(heading);
+  body.appendChild(togglebar);
+  if(m.view==="chart"){
+    body.appendChild(renderFunctionGrid(arr));
+  } else {
+    const card = el("div",{class:"card"});
+    card.appendChild(renderStakeholderEditor(arr));
+    body.appendChild(card);
+  }
+
+  return el("div",{},[tabs, formHolder, body]);
+}
+
+function statusClass(status){
+  if(status==="At risk") return "status-At-risk";
+  if(status==="No relationship identified") return "status-No";
+  return "status-"+status;
+}
+function nameById(arr, id){
+  const p = arr.find(x=>x.id===id);
+  return p ? p.name||"(unnamed)" : null;
+}
+
+/* ---- PowerPoint-style org chart ---- */
+function initials(name){
+  const parts = (name||"").trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return "?";
+  return parts.slice(0,2).map(w=>w[0].toUpperCase()).join("");
+}
+function renderFunctionGrid(arr){
+  const wrap = el("div",{class:"orgchart-wrap"});
+  if(!arr.length){
+    wrap.appendChild(el("p",{class:"hint"},[document.createTextNode("No stakeholders yet — switch to Edit list to add some.")]));
+    return wrap;
+  }
+
+  const catOrder = [];
+  const catMap = {};
+  arr.forEach(p=>{
+    const cat = p.category && p.category.trim() ? p.category.trim() : "Executive / Leadership";
+    if(!catMap[cat]){ catMap[cat]=[]; catOrder.push(cat); }
+    catMap[cat].push(p);
+  });
+
+  catOrder.forEach(cat=>{
+    const section = el("div",{class:"catsection",style:"margin-bottom:18px;"});
+    section.appendChild(el("div",{class:"catbar"},[document.createTextNode(cat)]));
+    const grid = el("div",{class:"catgrid"});
+    catMap[cat].forEach(p=>{
+      const card = el("div",{class:"orgcard "+statusClass(p.status)});
+      const top = el("div",{style:"display:flex;align-items:flex-start;gap:10px;"});
+      top.appendChild(el("div",{style:"width:32px;height:32px;border-radius:50%;background:#DCE4E7;color:#12395C;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"},[document.createTextNode(initials(p.name))]));
+      const nameCol = el("div",{style:"min-width:0;"});
+      nameCol.appendChild(el("div",{class:"orgcard-name"},[document.createTextNode(p.name||"(unnamed)")]));
+      nameCol.appendChild(el("div",{class:"orgcard-title"},[document.createTextNode(p.title||"")]));
+      top.appendChild(nameCol);
+      card.appendChild(top);
+      const meta = el("div",{class:"orgcard-meta"});
+      meta.appendChild(el("span",{class:"orgcard-owner"},[document.createTextNode("Owner: "+(p.owner||"TBD"))]));
+      if(p.buyerSeller && p.buyerSeller!=="N/A"){
+        meta.appendChild(el("span",{class:"orgcard-bs"},[document.createTextNode(p.buyerSeller)]));
+      }
+      card.appendChild(meta);
+      if(p.notes){
+        card.appendChild(el("div",{style:"font-size:11px;color:#5B6B74;margin-top:6px;line-height:1.4;"},[document.createTextNode(p.notes)]));
+      }
+      grid.appendChild(card);
+    });
+    section.appendChild(grid);
+    wrap.appendChild(section);
+  });
+
+  const legend = el("div",{class:"orglegend"});
+  const legendItems = [
+    ["Strong","#12395C"], ["Stable","#2E96A6"], ["Developing","#8FCAD1"], ["At risk","#C9D8DC"], ["No relationship identified","#FFFFFF"]
+  ];
+  legendItems.forEach(([label,color])=>{
+    const item = el("div",{class:"item"});
+    const sw = el("span",{class:"swatch",style:"background:"+color+(label==="No relationship identified"?";border:1px dashed #C7D0D3":"")});
+    item.appendChild(sw);
+    item.appendChild(document.createTextNode(label));
+    legend.appendChild(item);
+  });
+  ["Buyer","Seller","Both"].forEach(label=>{
+    const item = el("div",{class:"item"});
+    item.appendChild(el("span",{style:"width:8px;height:8px;border-radius:50%;background:#5B6B74;display:inline-block;"}));
+    item.appendChild(document.createTextNode(label));
+    legend.appendChild(item);
+  });
+  wrap.appendChild(legend);
+
+  return wrap;
+}
+
+function renderStakeholderEditor(arr){
+  const wrap = el("div",{class:"tablewrap"});
+  const table = el("table",{class:"edit-table"});
+  table.appendChild(el("thead",{},[el("tr",{},[
+    el("th",{},[document.createTextNode("Name")]),
+    el("th",{},[document.createTextNode("Title")]),
+    el("th",{},[document.createTextNode("Category / group")]),
+    el("th",{},[document.createTextNode("Reports to (1 / 2)")]),
+    el("th",{},[document.createTextNode("Relationship strength")]),
+    el("th",{},[document.createTextNode("Buyer / Seller")]),
+    el("th",{},[document.createTextNode("MetLife owner(s)")]),
+    el("th",{},[document.createTextNode("Notes")]),
+    el("th",{class:"action-col"},[])
+  ])]));
+  const tbody = el("tbody");
+  arr.forEach((row,idx)=>{
+    const tr = el("tr");
+    const td1 = el("td"); td1.appendChild(textInput(row.name,(v)=>{row.name=v;}));
+    const td2 = el("td"); td2.appendChild(textInput(row.title,(v)=>{row.title=v;}));
+    const td3 = el("td"); td3.appendChild(textInput(row.category,(v)=>{row.category=v;}, "e.g. Business Line Leadership"));
+
+    const td4 = el("td");
+    const twoSel = el("div",{class:"two-select"});
+    for(let slot=0; slot<2; slot++){
+      const options = [{id:"",name: slot===0? "— None (top) —":"— None —"}].concat(
+        arr.filter(p=>p.id!==row.id).map(p=>({id:p.id,name:p.name||"(unnamed)"}))
+      );
+      const sel = el("select",{});
+      options.forEach(o=>{
+        const opt = el("option",{value:o.id}); opt.textContent = o.name;
+        if(o.id===(row.reportsTo[slot]||"")) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener("change", ()=>{
+        const vals = [row.reportsTo[0]||"", row.reportsTo[1]||""];
+        vals[slot] = sel.value;
+        row.reportsTo = vals.filter(v=>v);
+        scheduleSave();
+      });
+      twoSel.appendChild(sel);
+    }
+    td4.appendChild(twoSel);
+
+    const td5 = el("td"); td5.appendChild(selectInput(row.status, STATUS_OPTIONS, (v)=>{row.status=v;}));
+    const td6 = el("td"); td6.appendChild(selectInput(row.buyerSeller||"N/A", BUYER_SELLER_OPTIONS, (v)=>{row.buyerSeller=v;}));
+    const td7 = el("td"); td7.appendChild(textInput(row.owner,(v)=>{row.owner=v;}, "Initials, comma-separated"));
+    const td8 = el("td"); td8.appendChild(textInput(row.notes,(v)=>{row.notes=v;}, "Optional notes"));
+    const td9 = el("td",{class:"action-col"});
+    const del = el("button",{class:"icon-btn",title:"Remove"},[document.createTextNode("✕")]);
+    del.addEventListener("click", ()=>{ arr.splice(idx,1); renderPage(); scheduleSave(); });
+    td9.appendChild(del);
+    [td1,td2,td3,td4,td5,td6,td7,td8,td9].forEach(td=>tr.appendChild(td));
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  const add = el("button",{class:"add-link"},[document.createTextNode("+ Add stakeholder")]);
+  add.style.marginTop = "10px";
+  add.addEventListener("click", ()=>{
+    const id = "p"+data.nextPersonId; data.nextPersonId++;
+    arr.push({id:id, name:"", title:"", category:"", status:"No relationship identified", owner:"TBD", buyerSeller:"N/A", reportsTo:[], notes:""});
+    renderPage(); scheduleSave();
+  });
+  return el("div",{},[wrap, add]);
+}
+
+/* ---- Page 8: Contacts Directory ---- */
+function openMailto(emails){
+  const link = document.createElement("a");
+  link.href = "mailto:"+emails.join(",");
+  link.target = "_blank";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+function renderContacts(){
+  const c = data.contacts;
+  const lobNames = data.glance.heatmap.map(h=>h.lob);
+  if(!lobNames.includes(c.activeLob)) c.activeLob = lobNames[0];
+
+  const tabs = renderLobTabs(lobNames, c.activeLob, (name)=>{ c.activeLob=name; renderPage(); });
+  const hint = el("p",{class:"hint"},[document.createTextNode("Lines of business come from the heatmap on the Relationship at a Glance page. Keep this to the 1–3 names that are actually relevant for each line of business.")]);
+
+  const arr = c.lobs[c.activeLob] || [];
+  const isGlobalBenefits = c.activeLob === "Global Benefits";
+
+  const card = el("div",{class:"card"});
+  const headerRow = el("div",{style:"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"});
+  headerRow.appendChild(el("h2",{style:"margin:0;"},[document.createTextNode("Contacts — "+c.activeLob)]));
+  const emailAllBtn = el("button",{class:"btn small primary"},[document.createTextNode("Email all")]);
+  emailAllBtn.addEventListener("click", ()=>{
+    const emails = arr.map(p=>p.email).filter(Boolean);
+    if(!emails.length){ toast("No email addresses entered for this line yet"); return; }
+    openMailto(emails);
+  });
+  headerRow.appendChild(emailAllBtn);
+  card.appendChild(headerRow);
+
+  const cols = [
+    {key:"name", label:"Name"},
+    {key:"title", label:"Account position / role"},
+    {key:"email", label:"Email"},
+    {key:"phone", label:"Phone (optional)"},
+    {key:"_email_action", label:"", type:"actionButton", buttonLabel:"Email", disabled:(row)=>!row.email, onClick:(row)=>{
+      if(!row.email){ toast("No email address entered for this person yet"); return; }
+      openMailto([row.email]);
+    }}
+  ];
+  if(isGlobalBenefits){
+    const gbLob = data.footprint.lobs["Global Benefits"];
+    let oppNames = [];
+    if(gbLob && gbLob.regions){
+      Object.keys(gbLob.regions).forEach(regionName=>{
+        (gbLob.regions[regionName].opportunities||[]).forEach(o=>{ if(o.opportunity) oppNames.push(o.opportunity+" ("+regionName+")"); });
+      });
+    }
+    card.appendChild(el("p",{class:"hint"},[document.createTextNode("Global Benefits spans several country-level opportunities — tag each contact to the opportunity they own, where relevant.")]));
+    cols.push({key:"opportunity", label:"Opportunity (Global Benefits)", type:"select", options:[""].concat(oppNames,["Other / general"])});
+  }
+  card.appendChild(editableTable(arr, cols, renderPage, "Add contact"));
+
+  return el("div",{},[tabs,hint,card]);
+}
+
+/* ---- Page 6: Strategic Growth and Opportunities ---- */
+function renderGrowth(){
+  const g = data.growthRisks;
+  const lobNames = data.glance.heatmap.map(h=>h.lob);
+  const lobTagOptions = [""].concat(lobNames);
+
+  const hint = el("p",{class:"hint"},[document.createTextNode("This is one enterprise-level list for "+data.accountName+" — not split by line of business. Tag an item with a line of business only if it's specific to one; leave it blank for a broad, account-level opportunity or risk.")]);
+
+  const c1 = el("div",{class:"card"});
+  c1.appendChild(el("h2",{},[document.createTextNode("Forward opportunities")]));
+  c1.appendChild(el("p",{class:"hint"},[document.createTextNode("Capture growth signals and white space, then translate each into a concrete, owned next step.")]));
+  c1.appendChild(editableTable(g.opportunities, [
+    {key:"signal", label:"Growth signal", wide:true},
+    {key:"whitespace", label:"White space / opportunity", wide:true},
+    {key:"nextStep", label:"Next step", wide:true},
+    {key:"owner", label:"Owner"},
+    {key:"timing", label:"Timing"},
+    {key:"lob", label:"Line of business (optional)", type:"select", options: lobTagOptions}
+  ], renderPage, "Add opportunity"));
+
+  const c2 = el("div",{class:"card"});
+  c2.appendChild(el("h2",{},[document.createTextNode("Risks & relationship gaps")]));
+  c2.appendChild(el("p",{class:"hint"},[document.createTextNode("Name known risks, size the value at risk, and pair each with a mitigation and an owner.")]));
+  c2.appendChild(editableTable(g.risks, [
+    {key:"risk", label:"Risk / gap", wide:true},
+    {key:"value", label:"Criticality / value at risk", wide:true},
+    {key:"mitigation", label:"Mitigation & next step", wide:true},
+    {key:"owner", label:"Owner"},
+    {key:"timing", label:"Timing"},
+    {key:"lob", label:"Line of business (optional)", type:"select", options: lobTagOptions}
+  ], renderPage, "Add risk"));
+
+  return el("div",{},[hint,c1,c2]);
+}
+
+/* ---- Page 7: Renewal Timeline ---- */
+function parseLooseDate(str){
+  if(!str) return null;
+  const m = String(str).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(!m) return null;
+  const d = new Date(parseInt(m[3],10), parseInt(m[1],10)-1, parseInt(m[2],10));
+  return isNaN(d.getTime()) ? null : d;
+}
+function collectRenewals(){
+  const rows = [];
+  Object.keys(data.footprint.lobs).forEach(lobName=>{
+    const lob = data.footprint.lobs[lobName];
+    if(lob.regions){
+      Object.keys(lob.regions).forEach(regionName=>{
+        (lob.regions[regionName].existing||[]).forEach(r=>{
+          if(r.nextRenewal){
+            rows.push({lob:lobName+" — "+regionName, business:r.business, amount:r.amount, broker:r.broker, dateStr:r.nextRenewal, date:parseLooseDate(r.nextRenewal), atRisk:r.atRisk});
+          }
+        });
+      });
+    } else {
+      (lob.existing||[]).forEach(r=>{
+        if(r.nextRenewal){
+          rows.push({lob:lobName, business:r.business, amount:r.amount, broker:r.broker, dateStr:r.nextRenewal, date:parseLooseDate(r.nextRenewal), atRisk:r.atRisk});
+        }
+      });
+    }
+  });
+  rows.sort((a,b)=>{
+    if(a.date && b.date) return a.date-b.date;
+    if(a.date) return -1;
+    if(b.date) return 1;
+    return 0;
+  });
+  return rows;
+}
+function collectTimelineEvents(){
+  const renewals = collectRenewals().map(r=>({
+    type:"renewal", date:r.date, dateStr:r.dateStr,
+    title:r.business||r.lob, sub:r.lob, atRisk:r.atRisk==="Yes"
+  }));
+  const meetings = (data.keyMeetings||[]).map((m,idx)=>({
+    type:"meeting", date:parseLooseDate(m.date), dateStr:m.date,
+    title:m.label||"(untitled meeting)", sub:"Key meeting", atRisk:false, meetingIdx:idx
+  }));
+  const events = renewals.concat(meetings);
+  events.sort((a,b)=>{
+    if(a.date && b.date) return a.date-b.date;
+    if(a.date) return -1;
+    if(b.date) return 1;
+    return 0;
+  });
+  return events;
+}
+function renderTimeline(){
+  const wrap = el("div",{});
+
+  const subTabs = el("div",{class:"lobtabs", style:"margin-bottom:10px;"});
+  const subTabNames = ["Timeline","Recent Interactions"];
+  const activeSub = data._timelineSubTab || "Timeline";
+  subTabNames.forEach(name=>{
+    const t = el("button",{class:"lobtab"+(name===activeSub?" active":"")},[document.createTextNode(name)]);
+    t.addEventListener("click", ()=>{ data._timelineSubTab=name; renderPage(); });
+    subTabs.appendChild(t);
+  });
+  wrap.appendChild(subTabs);
+
+  if(activeSub==="Recent Interactions"){
+    wrap.appendChild(renderInteractions());
+    return wrap;
+  }
+
+  const hint = el("p",{class:"hint"},[document.createTextNode("Combines \u201cNext renewal\u201d dates from the LoB-level Details page with manually-added key meetings below, laid out left to right in date order.")]);
+  wrap.appendChild(hint);
+
+  const windowBar = el("div",{class:"card", style:"padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"});
+  windowBar.appendChild(el("span",{style:"font-size:12.5px;font-weight:700;color:#1B3B5C;"},[document.createTextNode("Look ahead")]));
+  const winSelect = selectInput(data._timelineWindow||"All", ["Next 30 days","Next 60 days","Next 90 days","Next 6 months","Next 12 months","All"], (v)=>{ data._timelineWindow=v; renderPage(); });
+  windowBar.appendChild(winSelect);
+  windowBar.appendChild(el("span",{style:"display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#5B6B74;"},[
+    el("span",{style:"width:10px;height:10px;border-radius:50%;background:#2E96A6;display:inline-block;"}),
+    document.createTextNode("Renewal")
+  ]));
+  windowBar.appendChild(el("span",{style:"display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#5B6B74;"},[
+    el("span",{style:"width:10px;height:10px;border-radius:50%;background:#122B44;display:inline-block;"}),
+    document.createTextNode("Meeting")
+  ]));
+  windowBar.appendChild(el("span",{style:"display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#5B6B74;"},[
+    el("span",{style:"width:10px;height:10px;border-radius:50%;background:#B23A48;display:inline-block;"}),
+    document.createTextNode("At risk")
+  ]));
+  wrap.appendChild(windowBar);
+
+  const events = collectTimelineEvents();
+  const winDaysMap = {"Next 30 days":30,"Next 60 days":60,"Next 90 days":90,"Next 6 months":182,"Next 12 months":365};
+  const winDays = winDaysMap[data._timelineWindow];
+  const now = new Date();
+  const dated = events.filter(e=>e.date);
+  const undated = events.filter(e=>!e.date);
+  const filtered = dated.filter(e=>{
+    if(!winDays) return true;
+    const days = Math.floor((e.date-now)/86400000);
+    return days>=0 && days<=winDays;
+  });
+
+  const card = el("div",{class:"card"});
+  card.appendChild(el("h2",{},[document.createTextNode(data.accountName+" — timeline")]));
+
+  if(!filtered.length){
+    card.appendChild(el("p",{class:"hint"},[document.createTextNode("Nothing dated falls in this window yet.")]));
+  } else {
+    const scroller = el("div",{style:"overflow-x:auto;padding:28px 6px 10px;"});
+    const row = el("div",{style:"display:flex;align-items:center;min-width:max-content;"});
+    filtered.forEach((ev,idx)=>{
+      if(idx>0) row.appendChild(el("div",{style:"width:56px;height:2px;background:#DCE4E7;flex-shrink:0;"}));
+      const dotColor = ev.atRisk ? "#B23A48" : (ev.type==="meeting" ? "#122B44" : "#2E96A6");
+      const node = el("div",{style:"display:flex;flex-direction:column;align-items:center;gap:5px;min-width:132px;max-width:150px;flex-shrink:0;text-align:center;"});
+      node.appendChild(el("div",{style:"font-size:11px;font-weight:700;color:#1B3B5C;"},[document.createTextNode(ev.dateStr||"")]));
+      node.appendChild(el("div",{style:`width:14px;height:14px;border-radius:50%;background:${dotColor};border:2px solid #fff;box-shadow:0 0 0 1px ${dotColor};`}));
+      node.appendChild(el("div",{style:"font-size:12px;font-weight:600;color:#1E2A32;line-height:1.3;"},[document.createTextNode(ev.title)]));
+      node.appendChild(el("div",{style:"font-size:10.5px;color:#5B6B74;"},[document.createTextNode(ev.sub)]));
+      row.appendChild(node);
+    });
+    scroller.appendChild(row);
+    card.appendChild(scroller);
+  }
+
+  if(undated.length){
+    card.appendChild(el("p",{class:"hint"},[document.createTextNode("Undated: "+undated.map(e=>e.title).join(", "))]));
+  }
+
+  wrap.appendChild(card);
+
+  const meetingsCard = el("div",{class:"card"});
+  meetingsCard.appendChild(el("h2",{},[document.createTextNode("Key meetings")]));
+  meetingsCard.appendChild(el("p",{class:"hint"},[document.createTextNode("Add important, already-scheduled meetings here to plot them on the timeline above alongside renewals.")]));
+  meetingsCard.appendChild(editableTable(data.keyMeetings, [
+    {key:"date", label:"Date (M/D/YYYY)"},
+    {key:"label", label:"Meeting", wide:true}
+  ], renderPage, "Add meeting"));
+  wrap.appendChild(meetingsCard);
+
+  return wrap;
+}
+
+/* ---- Recent Interactions (sub-tab of Renewal Timeline) ---- */
+const MEETING_LEVEL_OPTIONS = ["","Executive","Senior","Working level"];
+const MEETING_STATUS_OPTIONS = ["","Requested","Scheduled","Report Draft","Completed","Cancelled"];
+const MEETING_PRIORITY_OPTIONS = ["","Low","Medium","High"];
+function renderInteractions(){
+  const wrap = el("div",{});
+  wrap.appendChild(el("p",{class:"hint"},[document.createTextNode("Modeled on the ERM executive meeting tracker. Intentionally limited to recent, completed interactions rather than upcoming ones — forward-looking ELT schedules live in the Executive Tracker itself, which has its own access controls. An automatic feed from that tracker is a future integration, not built yet.")]));
+
+  const c1 = el("div",{class:"card"});
+  c1.appendChild(el("h2",{},[document.createTextNode("Meeting tracker — "+data.accountName)]));
+  c1.appendChild(editableTable(data.interactions, [
+    {key:"eventName", label:"Event / meeting name", width:"220px"},
+    {key:"eventDate", label:"Event date", width:"140px"},
+    {key:"meetingLevel", label:"Meeting level", type:"select", options: MEETING_LEVEL_OPTIONS, width:"150px"},
+    {key:"purpose", label:"Purpose", wide:true, width:"280px"},
+    {key:"metlifeAttendees", label:"MetLife attendees", wide:true, width:"240px"},
+    {key:"counterpartyAttendees", label:"Counterparty attendees", wide:true, width:"240px"},
+    {key:"selectExecutive", label:"Select executive", width:"180px"},
+    {key:"rm", label:"RM", width:"150px"},
+    {key:"status", label:"Status", type:"select", options: MEETING_STATUS_OPTIONS, width:"150px"},
+    {key:"priority", label:"Priority", type:"select", options: MEETING_PRIORITY_OPTIONS, width:"130px"},
+    {key:"supportRequest", label:"Support request", wide:true, width:"240px"},
+    {key:"notes", label:"Notes", wide:true, width:"280px"}
+  ], renderPage, "Add meeting"));
+
+  return el("div",{},[c1]);
+}
+
+/* ============================= EMAIL SUMMARY ============================= */
+function buildSummary(){
+  let s = "";
+  s += "ACCOUNT PLANNING SUMMARY — "+data.accountName+" ("+data.tier+")\n";
+  s += "=".repeat(50)+"\n\n";
+
+  s += "KEY STAKEHOLDERS\n";
+  data.overview.stakeholders.forEach(p=> s += "- "+p.name+(p.title? " — "+p.title:"")+"\n");
+  s += "\nTIER RATIONALE\n";
+  data.overview.rationale.forEach(r=> s += "- "+r+"\n");
+  if(data.overview.opportunityThesis && data.overview.opportunityThesis.length){
+    s += "\nPIPELINE OPPORTUNITY THESIS\n";
+    data.overview.opportunityThesis.forEach(r=> s += "- "+r+"\n");
+  }
+
+  s += "\nCOMPANY PROFILE\n";
+  data.snapshot.metrics.filter(m=>m.isProfile).forEach(m=> s += "- "+m.label+": "+(m.value||"Pending auto-refresh")+"\n");
+
+  s += "\nBUSINESS PERFORMANCE METRICS\n";
+  data.snapshot.metrics.filter(m=>!m.isProfile).forEach(m=> s += "- "+m.label+(m.regions&&m.regions.length? " ("+m.regions.join(", ")+")":"")+": "+(m.value||"Pending auto-refresh")+"\n");
+
+  s += "\nRELATIONSHIP AT A GLANCE\n";
+  s += "Overall status: "+data.glance.overallStatus+"\n";
+  s += "In: "+data.glance.inAmount+" | Out: "+data.glance.outAmount+"\n";
+  s += "Importance to MetLife: "+data.glance.importanceToMetlife+" | Importance to "+data.accountName+": "+data.glance.importanceToSantander+"\n";
+
+  s += "\nBUSINESS LINE HEATMAP\n";
+  data.glance.heatmap.forEach(h=> s += "- "+h.lob+": "+h.value+" ("+h.type+")\n");
+
+  s += "\nCONTACTS DIRECTORY\n";
+  Object.keys(data.contacts.lobs).forEach(lobName=>{
+    const arr = data.contacts.lobs[lobName];
+    if(!arr.length) return;
+    s += lobName+":\n";
+    arr.forEach(p=>{ if(p.name||p.email) s += "  - "+(p.name||"(unnamed)")+(p.title? " — "+p.title:"")+(p.email? " <"+p.email+">":"")+"\n"; });
+  });
+
+  s += "\n— Generated from the ERM Account Planning workspace —\n";
+  return s;
+}
+
+function openEmailModal(){
+  document.getElementById("emailSubject").value = "Account Plan Summary — "+data.accountName;
+  document.getElementById("emailBody").value = buildSummary();
+  document.getElementById("emailOverlay").classList.add("show");
+}
+function closeEmailModal(){ document.getElementById("emailOverlay").classList.remove("show"); }
+
+/* ============================= PDF EXPORT ============================= */
+function esc(s){
+  return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function heatBadgeClass(type){
+  if(type==="Existing Relationship") return "pbadge existing";
+  if(type==="Whitespace Opportunity") return "pbadge whitespace";
+  return "pbadge na";
+}
+function heatCardHTML(row){
+  return `<div class="heatcard">
+    <div class="heatcard-top">
+      <div class="heatcard-name">${esc(row.lob)}</div>
+      <span class="${heatBadgeClass(row.type)}">${esc(row.type)}</span>
+    </div>
+    <div class="heatcard-value">${esc(row.value)}</div>
+  </div>`;
+}
+function revenueBarsHTML(arr){
+  if(!arr.length) return "";
+  const colors = ["#122B44","#2E96A6","#6FC1C9","#A9C6CC","#D6E4E7","#8FB6BC"];
+  let h = `<table><thead><tr><th>Category</th><th>%</th><th></th></tr></thead><tbody>`;
+  arr.forEach((row,idx)=>{
+    h += `<tr><td>${esc(row.label)}</td><td>${esc(row.value)}%</td><td style="width:170px;">
+      <div style="background:#eef2f3;border-radius:4px;height:10px;width:100%;overflow:hidden;">
+        <div style="background:${colors[idx%colors.length]};height:10px;width:${row.value}%;"></div>
+      </div>
+    </td></tr>`;
+  });
+  h += `</tbody></table>`;
+  return h;
+}
+function orgChartHTML(arr){
+  if(!arr.length) return `<p style="color:#5B6B74;font-size:12px;">No stakeholders yet.</p>`;
+  let h = `<div class="orgchart-wrap">`;
+  const catOrder = []; const catMap = {};
+  arr.forEach(p=>{
+    const cat = p.category && p.category.trim() ? p.category.trim() : "Executive / Leadership";
+    if(!catMap[cat]){ catMap[cat]=[]; catOrder.push(cat); }
+    catMap[cat].push(p);
+  });
+  catOrder.forEach(cat=>{
+    h += `<div class="catsection" style="margin-bottom:14px;">`;
+    h += `<div class="catbar">${esc(cat)}</div>`;
+    h += `<div class="catgrid">`;
+    catMap[cat].forEach(p=>{
+      h += `<div class="orgcard ${statusClass(p.status)}">
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <div style="width:26px;height:26px;border-radius:50%;background:#DCE4E7;color:#12395C;font-weight:800;font-size:10.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${esc(initials(p.name))}</div>
+          <div style="min-width:0;">
+            <div class="orgcard-name">${esc(p.name||"(unnamed)")}</div>
+            <div class="orgcard-title">${esc(p.title||"")}</div>
+          </div>
+        </div>
+        <div class="orgcard-meta">
+          <span class="orgcard-owner">Owner: ${esc(p.owner||"TBD")}</span>
+          ${p.buyerSeller && p.buyerSeller!=="N/A" ? `<span class="orgcard-bs">${esc(p.buyerSeller)}</span>` : ""}
+        </div>
+        ${p.notes ? `<div style="font-size:10.5px;color:#5B6B74;margin-top:4px;">${esc(p.notes)}</div>` : ""}
+      </div>`;
+    });
+    h += `</div></div>`;
+  });
+  h += `<div class="orglegend">`;
+  const legendItems = [["Strong","#12395C"],["Stable","#2E96A6"],["Developing","#8FCAD1"],["At risk","#C9D8DC"],["No relationship identified","#FFFFFF"]];
+  legendItems.forEach(([label,color])=>{
+    h += `<div class="item"><span class="swatch" style="background:${color};${label==="No relationship identified"?"border:1px dashed #C7D0D3;":""}"></span>${esc(label)}</div>`;
+  });
+  ["Buyer","Seller","Both"].forEach(label=>{
+    h += `<div class="item"><span style="width:8px;height:8px;border-radius:50%;background:#5B6B74;display:inline-block;"></span>${esc(label)}</div>`;
+  });
+  h += `</div></div>`;
+  return h;
+}
+function buildPrintableHTML(acc){
+  let h = "";
+  h += `<h1>${esc(acc.accountName)}</h1>`;
+  h += `<div class="printsub">${esc(acc.tier)} account &middot; Last edited ${esc(formatWhen(acc.lastEdited))} &middot; Generated ${esc(formatWhen(new Date().toISOString()))}</div>`;
+
+  h += `<h2>Business &amp; Strategic Overview</h2>`;
+  if(acc.overview.stakeholders.length){
+    h += `<h3>Key MetLife stakeholders</h3><table><thead><tr><th>Name</th><th>Title</th></tr></thead><tbody>`;
+    acc.overview.stakeholders.forEach(p=>{ h += `<tr><td>${esc(p.name)}</td><td>${esc(p.title)}</td></tr>`; });
+    h += `</tbody></table>`;
+  }
+  if(acc.overview.rationale.length){
+    h += `<h3>Tier rationale</h3><ul>`;
+    acc.overview.rationale.forEach(r=>{ h += `<li>${esc(r)}</li>`; });
+    h += `</ul>`;
+  }
+  if(acc.overview.opportunityThesis && acc.overview.opportunityThesis.length){
+    h += `<h3>Pipeline opportunity thesis</h3><ul>`;
+    acc.overview.opportunityThesis.forEach(r=>{ h += `<li>${esc(r)}</li>`; });
+    h += `</ul>`;
+  }
+
+  h += `<h2>Enterprise-level Snapshot</h2>`;
+  const profileMetrics = acc.snapshot.metrics.filter(m=>m.isProfile);
+  const businessMetrics = acc.snapshot.metrics.filter(m=>!m.isProfile);
+  if(profileMetrics.length){
+    h += `<h3>Company profile</h3>`;
+    h += `<table><thead><tr><th>Fact</th><th>Value</th><th>Notes</th></tr></thead><tbody>`;
+    profileMetrics.forEach(m=>{ h += `<tr><td>${esc(m.label)}</td><td>${esc(m.value||"Pending auto-refresh")}</td><td>${esc(m.notes)}</td></tr>`; });
+    h += `</tbody></table>`;
+  }
+  if(businessMetrics.length){
+    h += `<h3>Business performance metrics</h3>`;
+    h += `<table><thead><tr><th>Metric</th><th>Region</th><th>Value</th><th>Notes</th></tr></thead><tbody>`;
+    businessMetrics.forEach(m=>{ h += `<tr><td>${esc(m.label)}</td><td>${esc(m.regions&&m.regions.length? m.regions.join(", "):"—")}</td><td>${esc(m.value||"Pending auto-refresh")}</td><td>${esc(m.notes)}</td></tr>`; });
+    h += `</tbody></table>`;
+  }
+  if(acc.snapshot.developments.length){
+    h += `<h3>Recent developments</h3><ul>`;
+    acc.snapshot.developments.forEach(d=>{ h += `<li>${esc(d)}</li>`; });
+    h += `</ul>`;
+  }
+  if(acc.snapshot.priorities.length){
+    h += `<h3>Priorities</h3><ul>`;
+    acc.snapshot.priorities.forEach(d=>{ h += `<li>${esc(d)}</li>`; });
+    h += `</ul>`;
+  }
+  h += `<h2>Relationship at a Glance</h2>`;
+  h += `<div class="metagrid">
+    <span>Overall status: <b>${esc(acc.glance.overallStatus)}</b></span>
+    <span>In: <b>${esc(acc.glance.inAmount||"—")}</b></span>
+    <span>Out: <b>${esc(acc.glance.outAmount||"—")}</b></span>
+    <span>Importance to MetLife: <b>${esc(acc.glance.importanceToMetlife)}</b></span>
+    <span>Importance to ${esc(acc.accountName)}: <b>${esc(acc.glance.importanceToSantander)}</b></span>
+  </div>`;
+  if(acc.glance.heatmap.length){
+    h += `<h3>Business heatmap</h3><div class="heatgrid">`;
+    acc.glance.heatmap.forEach(row=>{ h += heatCardHTML(row); });
+    h += `</div>`;
+  }
+
+  h += `<h2>LoB-level Details</h2>`;
+  function existingOppTableHTML(label, bucket){
+    let hh = "";
+    if(bucket.existing && bucket.existing.length){
+      hh += `<table><thead><tr><th>Existing business</th><th>Amount</th><th>Broker</th><th>Effective</th><th>Renewal cycle (mo)</th><th>Next renewal</th><th>Renewed</th><th>At risk?</th><th>Notes</th></tr></thead><tbody>`;
+      bucket.existing.forEach(r=>{ hh += `<tr><td>${esc(r.business)}</td><td>${esc(r.amount)}</td><td>${esc(r.broker)}</td><td>${esc(r.effective)}</td><td>${esc(r.renewalCycleMonths)}</td><td>${esc(r.nextRenewal)}</td><td>${esc(r.renewed)}</td><td>${esc(r.atRisk)}</td><td>${esc(r.notes)}</td></tr>`; });
+      hh += `</tbody></table>`;
+    }
+    if(bucket.opportunities && bucket.opportunities.length){
+      hh += `<table><thead><tr><th>Opportunity</th><th>Amount</th><th>Effective</th><th>Owner</th><th>Target date</th><th>Status</th><th>Notes</th></tr></thead><tbody>`;
+      bucket.opportunities.forEach(r=>{ hh += `<tr><td>${esc(r.opportunity)}</td><td>${esc(r.amount)}</td><td>${esc(r.effective)}</td><td>${esc(r.owner)}</td><td>${esc(r.target)}</td><td>${esc(r.awarded)}</td><td>${esc(r.notes)}</td></tr>`; });
+      hh += `</tbody></table>`;
+    }
+    return hh;
+  }
+  Object.keys(acc.footprint.lobs).forEach(lobName=>{
+    const lob = acc.footprint.lobs[lobName];
+    if(lob.regions){
+      const hasAny = Object.values(lob.regions).some(b=> (b.existing&&b.existing.length) || (b.opportunities&&b.opportunities.length));
+      if(!hasAny) return;
+      h += `<div class="lobblock"><h3>${esc(lobName)}</h3>`;
+      Object.keys(lob.regions).forEach(regionName=>{
+        const bucket = lob.regions[regionName];
+        if(!(bucket.existing&&bucket.existing.length) && !(bucket.opportunities&&bucket.opportunities.length)) return;
+        h += `<h4 style="font-size:12px;color:#1B3B5C;margin:10px 0 6px;">${esc(regionName)}</h4>`;
+        h += existingOppTableHTML(regionName, bucket);
+      });
+      if(lob.attributes && (lob.attributes.maxisClient||lob.attributes.notes)){
+        h += `<div class="metagrid"><span>MAXIS client: <b>${esc(lob.attributes.maxisClient||"—")}</b></span>`;
+        if(lob.attributes.maxisClient==="Yes"){
+          h += `<span>Type: <b>${esc(lob.attributes.maxisType||"—")}</b></span>`;
+          if(lob.attributes.maxisType==="Other" && lob.attributes.maxisOtherDescription){
+            h += `<span>Description: <b>${esc(lob.attributes.maxisOtherDescription)}</b></span>`;
+          }
+        }
+        h += `</div>`;
+        if(lob.attributes.notes) h += `<p>${esc(lob.attributes.notes)}</p>`;
+      }
+      h += `</div>`;
+    } else {
+      if(!lob.existing.length && !lob.opportunities.length) return;
+      h += `<div class="lobblock"><h3>${esc(lobName)}</h3>`;
+      h += existingOppTableHTML(lobName, lob);
+      h += `</div>`;
+    }
+  });
+
+  h += `<h2>Contacts Directory</h2>`;
+  let anyContacts = false;
+  Object.keys(acc.contacts.lobs).forEach(lobName=>{
+    const arr = acc.contacts.lobs[lobName].filter(p=>p.name||p.email);
+    if(!arr.length) return;
+    anyContacts = true;
+    const hasOpp = lobName === "Global Benefits";
+    h += `<div class="lobblock"><h3>${esc(lobName)}</h3><table><thead><tr><th>Name</th><th>Title</th><th>Email</th><th>Phone</th>${hasOpp? "<th>Opportunity</th>":""}</tr></thead><tbody>`;
+    arr.forEach(p=>{ h += `<tr><td>${esc(p.name)}</td><td>${esc(p.title)}</td><td>${esc(p.email)}</td><td>${esc(p.phone)}</td>${hasOpp? "<td>"+esc(p.opportunity||"—")+"</td>":""}</tr>`; });
+    h += `</tbody></table></div>`;
+  });
+  if(!anyContacts) h += `<p style="font-size:12px;color:#5B6B74;">No contacts entered yet.</p>`;
+
+  return `<div class="printdoc">${h}</div>`;
+}
+function exportPDF(){
+  const printArea = document.getElementById("printArea");
+  printArea.innerHTML = buildPrintableHTML(data);
+  const prevTitle = document.title;
+  document.title = data.accountName+" — Account Plan";
+  window.print();
+  document.title = prevTitle;
+  toast('In the print dialog, choose "Save as PDF" as the destination to download a file');
+}
+
+function openPreviewModal(){
+  document.getElementById("previewContent").innerHTML = buildPrintableHTML(data);
+  document.getElementById("previewOverlay").classList.add("show");
+}
+function closePreviewModal(){ document.getElementById("previewOverlay").classList.remove("show"); }
+
+document.getElementById("emailBtn").addEventListener("click", openEmailModal);
+document.getElementById("exportPdfBtn").addEventListener("click", exportPDF);
+document.getElementById("previewBtn").addEventListener("click", openPreviewModal);
+document.getElementById("closePreviewBtn").addEventListener("click", closePreviewModal);
+document.getElementById("previewExportBtn").addEventListener("click", ()=>{ closePreviewModal(); exportPDF(); });
+document.getElementById("closeEmailBtn").addEventListener("click", closeEmailModal);
+document.getElementById("copyBtn").addEventListener("click", async ()=>{
+  const text = document.getElementById("emailBody").value;
+  try{ await navigator.clipboard.writeText(text); toast("Summary copied to clipboard"); }
+  catch(e){ toast("Couldn't copy automatically — select the text and copy manually"); }
+});
+document.getElementById("openMailBtn").addEventListener("click", ()=>{
+  const to = encodeURIComponent(document.getElementById("emailTo").value||"");
+  const subject = encodeURIComponent(document.getElementById("emailSubject").value||"");
+  const body = encodeURIComponent(document.getElementById("emailBody").value||"");
+  const link = document.createElement("a");
+  link.href = "mailto:"+to+"?subject="+subject+"&body="+body;
+  link.target = "_blank";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
+/* ============================= NAV ============================= */
+document.getElementById("prevBtn").addEventListener("click", ()=>{ if(currentPage>0){ currentPage--; renderAll(); } });
+document.getElementById("nextBtn").addEventListener("click", ()=>{ if(currentPage<PAGES.length-1){ currentPage++; renderAll(); } });
+
+/* ============================= INIT ============================= */
+loadData();
+</script>
+</body>
+</html>
