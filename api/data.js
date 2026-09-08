@@ -43,9 +43,9 @@ module.exports = async function handler(req, res) {
         method: "POST",
         headers: {
           Authorization: `Bearer ${TOKEN}`,
-          "Content-Type": "application/json"
+          "Content-Type": "text/plain"
         },
-        body: JSON.stringify(value)
+        body: value
       });
       if (!r.ok) throw new Error(`Upstash SET failed: ${r.status}`);
       const json = await r.json();
