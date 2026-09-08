@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/thin", "destination": "/thin-account.html" }
+  ]
+}
