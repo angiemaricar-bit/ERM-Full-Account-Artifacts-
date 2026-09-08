@@ -7,7 +7,7 @@
 //   UPSTASH_REDIS_REST_URL
 //   UPSTASH_REDIS_REST_TOKEN
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const BASE = process.env.UPSTASH_REDIS_REST_URL;
   const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
